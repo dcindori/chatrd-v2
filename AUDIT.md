@@ -84,7 +84,73 @@ read that instead of the display text.
 - The fork point is 193 commits behind upstream `main`; rebasing/merging upstream would be
   a substantial (and probably not worthwhile) effort given how far the skin has diverged.
 
-## Deep code review
+## Deep code review findings (verified)
 
-A multi-agent code review was run separately; its verified findings are appended below
-when available.
+A second, deeper review pass (8 angles, every finding verified against the actual code).
+Dominant theme: **new features are wired into the shared `addEventItem`/module pipeline
+but only designed for the default skin** — the top findings are cross-skin or
+fallback-path regressions.
+
+### High severity
+
+1. **Toasts break every non-default skin.** `addEventItem` (`js/chatrd.js:357`)
+   unconditionally dual-mounts every event into `#chat-toasts`, but only
+   `skin-chatrd.css` styles that container. On `stream`, `stream-bubbles`, `nutting`,
+   `kimballs`, `bubbles`, or an external skin URL, the clone renders as an unstyled
+   static block at the top of `.wrapper` — every sub/raid/donation appears **twice** for
+   5 s and pushes `#chat` down instead of overlaying it.
+   *Fix:* gate `showEventToast` on the active skin, or move the `#chat-toasts`
+   positioning rules into `css/chatrd.css` (structural base).
+
+2. **Toasts render 0px tall when the Motion CDN is unreachable.** In the no-CDN fallback
+   path the inline item still has `height: 0px` inline style when `showEventToast`
+   clones it synchronously (`js/chatrd.js:364`; the fallback expands the item 10 ms
+   later). The clone keeps `height:0px` forever — toasts collapse and overlap. Applies
+   on any OBS machine without access to cdn.jsdelivr.net.
+   *Fix:* clear the dimension inline style on the clone in `showEventToast`.
+
+3. **Live bar shows "LIVE 0 watching" whenever the YouTube module is enabled.**
+   `platformActive('youtube')` (`js/chatrd.js:1188`) only checks element existence and
+   ignores `display`, unlike the other three platforms. The YouTube module inserts
+   `<div id="youtube" style="display:none">` at load, so the bar un-hides even with
+   statistics off and nothing live.
+   *Fix:* apply the same `el.style.display !== 'none'` check.
+
+4. **Username-color removal regresses the legacy skins.** Deleting the inline
+   `user.style.color` assignments (twitch:206, youtube:151, tiktok:221, kick:322) kills
+   per-user colors on `nutting`/`kimballs`/`bubbles` too — none of those skins define a
+   `.user` color rule; they relied entirely on the inline style. The "force white" rules
+   exist only in `skin-chatrd.css`.
+   *Fix:* keep setting the color but let skin-chatrd override it (it already forces
+   white with higher specificity), or set it as a CSS custom property the skins can opt
+   into.
+
+### Medium severity
+
+5. **Moderation can't remove toast clones.** Deleted/banned users' announcement content
+   stays on screen up to 5 s after moderation removes the inline copy — deletion works
+   by element id (stripped from the clone) and ban queries only `#chat`
+   (`js/chatrd.js:361`, `twitch/module.js:871`).
+   *Fix:* on delete/ban, also query `#chat-toasts` by `data-user`/message data attribute.
+
+6. **Dead `createRandomColor` awaits on the hot path.** TikTok (`module.js:219`) and
+   YouTube (`module.js:149`) still await `createRandomColor` per message even though the
+   result is unused after the color removal — plus the `userColors` Map grows one entry
+   per unique chatter, never pruned. *Fix:* delete the calls (or see finding 4).
+
+### Low severity / cleanup
+
+7. **Unused `framer-motion` npm dependency** (`package.json`) — duplicate of "Should
+   fix #3" above; the CDN pin (12.23.12) and declared range (^12.38.0) can silently
+   diverge.
+8. **`--glow-stroke` is dead** (`css/skin-chatrd.css:84`) — never consumed via `var()`;
+   the real hairline stroke knob is `--chatrd-text-stroke` (line 85). CLAUDE.md's
+   "Readability system" section documents the dead variable, so future edits following
+   those instructions will tweak a no-op. *Fix:* remove the variable and correct
+   CLAUDE.md, or wire it up.
+9. **`TOAST_EXIT_MS` unused** (`js/chatrd.js:44`) — `dismissToast` hardcodes 0.22/0.14 s;
+   the named constant next to the two used ones is the obvious (non-functional) knob.
+10. **Scramble first frame collapses** (`js/chatrd-scramble.js`) — initial render uses
+    collapsible spaces; the shrink-wrapped event card visibly jumps narrower for a frame
+    (up to the full per-node delay, e.g. 300 ms for `.actual-message`). Use ` `
+    like phase 1 does.
