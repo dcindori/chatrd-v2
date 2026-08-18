@@ -154,3 +154,102 @@ fallback-path regressions.
     collapsible spaces; the shrink-wrapped event card visibly jumps narrower for a frame
     (up to the full per-node delay, e.g. 300 ms for `.actual-message`). Use ` `
     like phase 1 does.
+
+## Improvements audit (approaches, optimizations, features)
+
+Not bugs — opportunities. Ordered roughly by value.
+
+### Architecture & resilience
+
+1. **Vendor the CDN dependencies locally.** `chat.html` loads 8 external resources
+   (Google Fonts, Font Awesome, simple-notify, animate.css, motion, DOMPurify,
+   Streamer.bot client, simple-notify JS) from jsDelivr/Google. An OBS overlay should
+   survive an offline machine or a CDN outage — right now a jsDelivr hiccup on stream
+   day degrades or breaks the overlay. Copy them into `vendor/` and reference locally.
+   This is the single biggest robustness win and eliminates the whole
+   "Motion-CDN-unreachable" fallback bug class.
+
+2. **Consider dropping Motion entirely for native `element.animate()` (WAAPI).** The
+   usage is simple fades/slides/springs; WAAPI is built into every browser OBS ships,
+   needs no import, no fallback path, and no dual code branches. One code path instead
+   of two per animation site. (Springs can be approximated with
+   `cubic-bezier`/`linear()` easing.)
+
+3. **Make new features opt-in URL params, consistent with the existing param system.**
+   `showToasts`, `showLiveBar`, `showDensity`, `scramble` — defaulting sensibly per
+   skin. This fixes the "features only designed for the default skin" class of bugs
+   architecturally (the cross-skin toast bug stops being possible), gives users
+   control, and matches how everything else in ChatRD is configured.
+
+4. **Teach the settings page about the fork.** `js/settings.js`/`index.html` have zero
+   references to the new skins (`chatrd`, `stream`, `stream-bubbles`) or any new
+   feature. Anyone using the settings generator gets URLs that can't express the
+   fork's main functionality.
+
+5. **Replace the live-bar MutationObserver + text re-parsing with a tiny stats API.**
+   Modules already know the exact viewer count when they update `#statistics`; have
+   them also call `chatrdStats.set('twitch', 1249)` and let the live bar subscribe.
+   Removes the lossy "1.2K" round-trip, the debounce, and the observer entirely.
+   Same argument for the scramble and density observers: you own the insertion point
+   (`addMessageItem`/`addEventItem`), so call hooks directly — MutationObserver is for
+   DOM you *can't* modify. Three observers → zero.
+
+6. **Central sanitization chokepoint.** DOMPurify is loaded but unused on the message
+   path; each module hand-builds `innerHTML`. Sanitize once in
+   `addMessageItem`/`addEventItem` (`.actual-message`, `.reply`, `.value`) so no module
+   can ship an injection bug — closes the inherited Kick hole and future-proofs
+   new modules.
+
+7. **Extract the shared mount/animate logic.** `addMessageItem` and `addEventItem`
+   duplicate ~40 lines (collapse-then-expand, animate branch, hideAfter). One
+   `mountItem(clone, opts)` removes the duplication that already let the two paths
+   drift.
+
+### CSS
+
+8. **Adopt cascade layers.** ~411 lines in `skin-chatrd.css` contain `!important` — the
+   classic symptom of fighting specificity across the base/skin/module load order.
+   `@layer base, skin, modules;` makes override order declarative, lets you delete most
+   `!important`s, and…
+
+9. **…lets reduced-motion become one rule.** The current `prefers-reduced-motion` block
+   is a hand-maintained "union of every animation selector" list (its own comment warns
+   it must be updated in sync). Once animations aren't `!important`, a single
+   `#chat *, #chat-toasts *, #live-bar * { animation: none !important; }` covers
+   everything forever.
+
+### Performance (all minor — the overlay is fine today)
+
+10. The density bar's 500 ms `setInterval` ticks forever even when chat is idle; tie it
+    to message activity or pause when the window is empty.
+11. `userColors` Map grows one entry per unique chatter per stream, never pruned
+    (mostly moot if the dead `createRandomColor` calls are deleted per the bug list).
+
+### Features worth considering
+
+12. **Gift-bomb / raid aggregation.** Collapse N identical gift subs arriving in a burst
+    into one card with an escalating counter ("×20 gifted!"). You reverted the H10
+    escalation-tier system once — plain aggregation without tiers may be the version
+    that sticks, and it directly reduces event spam, which toasts amplify.
+13. **Hype-train / goal progress in the live bar.** The bar already aggregates
+    platforms; a slim progress segment during hype trains fits it naturally.
+14. **Toast position/stack params** (top vs. bottom, max count) once toasts become a
+    URL-param feature.
+15. **Cherry-pick from upstream.** The fork point is 193 commits behind; upstream almost
+    certainly carries platform-payload fixes (Twitch/Kick/TikTok change their event
+    shapes over time and modules rot). Add `vortisrd/chatrd` as a `upstream` remote and
+    periodically scan `git log upstream/main -- js/modules/` for module fixes worth
+    cherry-picking — skin divergence doesn't block those.
+
+### Testing & tooling
+
+16. **Drive previews through the real pipeline instead of static HTML.** The preview
+    pages hand-write mock DOM, which silently drifts from what the modules actually
+    produce (template changes, new classes). Better: record real Streamer.bot JSON
+    payloads and have the preview call the actual handlers
+    (`TwitchMessageHandlers['Twitch.ChatMessage'](payload)`) — no websocket needed.
+    The preview then exercises real code and doubles as a regression harness for every
+    future skin edit.
+17. **Optional: Playwright screenshot tests** over that preview page — one `npx
+    playwright screenshot` per skin catches visual regressions without adding a build
+    step to the overlay itself.
