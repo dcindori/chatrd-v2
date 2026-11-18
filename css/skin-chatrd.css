@@ -236,8 +236,8 @@ body {
 #chat-toasts .info .pronouns {
     display: none !important;
 }
-#chat .item.chat .avatar,
-#chat .item.chat .avatar:empty {
+#chat .item.msg .avatar,
+#chat .item.msg .avatar:empty {
     display: none !important;
 }
 
@@ -253,8 +253,8 @@ body {
 }
 
 /* Un-hide avatar for chat rows when stack is active */
-#chat.show-avatar .item.chat .avatar,
-#chat.show-avatar .item.chat .avatar:empty {
+#chat.show-avatar .item.msg .avatar,
+#chat.show-avatar .item.msg .avatar:empty {
     display: flex !important;
 }
 
@@ -264,15 +264,15 @@ body {
 }
 /* first-chatter and mention rows each declare their own grid-template-columns with !important,
    so they need explicit show-avatar overrides to honour the dynamic stack sep width. */
-#chat.show-avatar:not(.horizontal):not(.oneline) .item.chat.first-chatter .message {
+#chat.show-avatar:not(.horizontal):not(.oneline) .item.msg.first-chatter .message {
     grid-template-columns: var(--chatrd-user-col) calc(var(--avatar-stack-sep) + 18px) max-content !important;
 }
-#chat.show-avatar:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .message {
+#chat.show-avatar:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .message {
     grid-template-columns: var(--chatrd-user-col) calc(var(--avatar-stack-sep) + 18px) max-content !important;
 }
 
 /* User avatar — right circle, z-2 */
-#chat.show-avatar:not(.horizontal):not(.oneline) .item.chat .info .avatar {
+#chat.show-avatar:not(.horizontal):not(.oneline) .item.msg .info .avatar {
     position: absolute !important;
     left: 100%;
     margin-left: calc(var(--chatrd-gap) + var(--avatar-stack-sep));
@@ -310,7 +310,7 @@ body {
 }
 
 /* Initial letter rendered via ::after — visible when img fails or is absent */
-#chat.show-avatar:not(.horizontal):not(.oneline) .item.chat .info .avatar::after {
+#chat.show-avatar:not(.horizontal):not(.oneline) .item.msg .info .avatar::after {
     content: attr(data-initial);
     font-size: 9px;
     font-weight: 800;
@@ -320,7 +320,7 @@ body {
 }
 
 /* Avatar img fills the circle — covers ::after when loaded */
-#chat.show-avatar .item.chat .info .avatar img {
+#chat.show-avatar .item.msg .info .avatar img {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -346,7 +346,7 @@ body {
    Tile lives separately in col 2 via .platform pulled out of .info.
    ========================================================= */
 
-#chat:not(.horizontal):not(.oneline) .item.chat .info .avatar {
+#chat:not(.horizontal):not(.oneline) .item.msg .info .avatar {
     display: none !important;
 }
 /* Avatar display none is overridden above by .show-avatar selector (higher specificity) */
@@ -482,59 +482,80 @@ body {
     color: var(--fg-primary) !important;
 }
 
+/* Upstream ChatRD now renders the username as a link inside .user
+   (<span class="user"><a style="--user-color:…">name</a></span>) and colours
+   the link per user. This skin colours by role on .user, so make the link
+   inherit everything from it. `display: inline` keeps text-overflow ellipsis
+   working on long names. */
+#chat .user a,
+#chat-toasts .user a {
+    display: inline;
+    color: inherit !important;
+    text-decoration: none;
+    text-shadow: inherit;
+    -webkit-text-stroke: inherit;
+    paint-order: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+}
+#chat .user a:hover,
+#chat-toasts .user a:hover {
+    text-shadow: inherit;
+}
+
 /* Role weight + color override.
    Cascade order is low → high priority: sub < founder < artist < vip
    < partner < verified < turbo < prime < global-mod < mod < admin
    < staff < streamer. Lead mod + broadcaster get extra emphasis below. */
-#chat .item.chat.role-sub .user {
+#chat .item.msg.role-sub .user {
     color: var(--role-sub) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-founder .user {
+#chat .item.msg.role-founder .user {
     color: var(--role-founder) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-artist .user {
+#chat .item.msg.role-artist .user {
     color: var(--role-artist) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-vip .user {
+#chat .item.msg.role-vip .user {
     color: var(--role-vip) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-partner .user {
+#chat .item.msg.role-partner .user {
     color: var(--role-partner) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-verified .user {
+#chat .item.msg.role-verified .user {
     color: var(--role-verified) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-turbo .user {
+#chat .item.msg.role-turbo .user {
     color: var(--role-turbo) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-prime .user {
+#chat .item.msg.role-prime .user {
     color: var(--role-prime) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-hype .user {
+#chat .item.msg.role-hype .user {
     color: var(--role-hype) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-bits-leader .user {
+#chat .item.msg.role-bits-leader .user {
     color: var(--role-bits-leader) !important;
     font-weight: 700 !important;
 }
-#chat .item.chat.role-global-mod .user {
+#chat .item.msg.role-global-mod .user {
     color: var(--role-global-mod) !important;
     font-weight: 800 !important;
 }
-#chat .item.chat.role-admin .user {
+#chat .item.msg.role-admin .user {
     color: var(--role-admin) !important;
     font-weight: 800 !important;
 }
-#chat .item.chat.role-staff .user {
+#chat .item.msg.role-staff .user {
     color: var(--role-staff) !important;
     font-weight: 800 !important;
 }
@@ -545,7 +566,7 @@ body {
    -webkit-text-stroke + paint-order are declared explicitly here rather than
    relying on inheritance, to ensure the hairline stroke survives any future
    cascade changes. */
-#chat .item.chat.role-mod .user {
+#chat .item.msg.role-mod .user {
     color: var(--role-mod) !important;
     font-weight: 800 !important;
     letter-spacing: -0.01em;
@@ -555,7 +576,7 @@ body {
     -webkit-text-stroke: var(--chatrd-text-stroke);
     paint-order: stroke fill;
 }
-#chat .item.chat.role-lead-mod .user {
+#chat .item.msg.role-lead-mod .user {
     color: var(--role-mod) !important;
     font-weight: 900 !important;
     letter-spacing: -0.01em;
@@ -566,7 +587,7 @@ body {
     -webkit-text-stroke: var(--chatrd-text-stroke);
     paint-order: stroke fill;
 }
-#chat .item.chat.streamer .user {
+#chat .item.msg.streamer .user {
     color: var(--role-streamer) !important;
     font-weight: 900 !important;
     letter-spacing: -0.02em;
@@ -591,13 +612,13 @@ body {
    below. `display` toggles from `none` on `.role-icon` itself (idle) to
    `inline-block` on the matching role's `.role-icon::before` (active). */
 
-#chat .item.chat .info .role-icon {
+#chat .item.msg .info .role-icon {
     flex-shrink: 0;
     order: 4;
     display: none;
     line-height: 1;
 }
-#chat .item.chat .info .role-icon::before {
+#chat .item.msg .info .role-icon::before {
     font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
     font-weight: 900;
     font-size: 10px;
@@ -605,86 +626,86 @@ body {
     filter: drop-shadow(0 0 4px currentColor);
 }
 /* Role icons — cascade from least → most prestigious so the highest role wins */
-#chat .item.chat.role-sub .info .role-icon,
-#chat .item.chat.role-founder .info .role-icon,
-#chat .item.chat.role-artist .info .role-icon,
-#chat .item.chat.role-vip .info .role-icon,
-#chat .item.chat.role-turbo .info .role-icon,
-#chat .item.chat.role-prime .info .role-icon,
-#chat .item.chat.role-hype .info .role-icon,
-#chat .item.chat.role-bits-leader .info .role-icon,
-#chat .item.chat.role-verified .info .role-icon,
-#chat .item.chat.role-partner .info .role-icon,
-#chat .item.chat.role-global-mod .info .role-icon,
-#chat .item.chat.role-admin .info .role-icon,
-#chat .item.chat.role-staff .info .role-icon,
-#chat .item.chat.role-editor .info .role-icon,
-#chat .item.chat.role-mod .info .role-icon,
-#chat .item.chat.role-lead-mod .info .role-icon,
-#chat .item.chat.streamer .info .role-icon {
+#chat .item.msg.role-sub .info .role-icon,
+#chat .item.msg.role-founder .info .role-icon,
+#chat .item.msg.role-artist .info .role-icon,
+#chat .item.msg.role-vip .info .role-icon,
+#chat .item.msg.role-turbo .info .role-icon,
+#chat .item.msg.role-prime .info .role-icon,
+#chat .item.msg.role-hype .info .role-icon,
+#chat .item.msg.role-bits-leader .info .role-icon,
+#chat .item.msg.role-verified .info .role-icon,
+#chat .item.msg.role-partner .info .role-icon,
+#chat .item.msg.role-global-mod .info .role-icon,
+#chat .item.msg.role-admin .info .role-icon,
+#chat .item.msg.role-staff .info .role-icon,
+#chat .item.msg.role-editor .info .role-icon,
+#chat .item.msg.role-mod .info .role-icon,
+#chat .item.msg.role-lead-mod .info .role-icon,
+#chat .item.msg.streamer .info .role-icon {
     display: inline-block;
 }
 
-#chat .item.chat.role-sub .info .role-icon::before {
+#chat .item.msg.role-sub .info .role-icon::before {
     content: "\f005";
     color: var(--role-sub);
 } /* star */
-#chat .item.chat.role-founder .info .role-icon::before {
+#chat .item.msg.role-founder .info .role-icon::before {
     content: "\f525";
     color: var(--role-founder);
 } /* dice-one */
-#chat .item.chat.role-artist .info .role-icon::before {
+#chat .item.msg.role-artist .info .role-icon::before {
     content: "\f1fc";
     color: var(--role-artist);
 } /* paintbrush */
-#chat .item.chat.role-vip .info .role-icon::before {
+#chat .item.msg.role-vip .info .role-icon::before {
     content: "\f3a5";
     color: var(--role-vip);
 } /* gem */
-#chat .item.chat.role-turbo .info .role-icon::before {
+#chat .item.msg.role-turbo .info .role-icon::before {
     content: "\f5e7";
     color: var(--role-turbo);
 } /* charging-station */
-#chat .item.chat.role-prime .info .role-icon::before {
+#chat .item.msg.role-prime .info .role-icon::before {
     content: "\f521";
     color: var(--role-prime);
 } /* crown */
-#chat .item.chat.role-hype .info .role-icon::before {
+#chat .item.msg.role-hype .info .role-icon::before {
     content: "\f238";
     color: var(--role-hype);
 } /* train */
-#chat .item.chat.role-bits-leader .info .role-icon::before {
+#chat .item.msg.role-bits-leader .info .role-icon::before {
     content: "\f3a5";
     color: var(--role-bits-leader);
 } /* gem */
-#chat .item.chat.role-verified .info .role-icon::before {
+#chat .item.msg.role-verified .info .role-icon::before {
     content: "\f058";
     color: var(--role-verified);
 } /* circle-check */
-#chat .item.chat.role-partner .info .role-icon::before {
+#chat .item.msg.role-partner .info .role-icon::before {
     content: "\f058";
     color: var(--role-partner);
 } /* circle-check */
-#chat .item.chat.role-global-mod .info .role-icon::before {
+#chat .item.msg.role-global-mod .info .role-icon::before {
     content: "\f0ac";
     color: var(--role-global-mod);
 } /* globe */
-#chat .item.chat.role-admin .info .role-icon::before {
+#chat .item.msg.role-admin .info .role-icon::before {
     content: "\f132";
     color: var(--role-admin);
 } /* shield */
-#chat .item.chat.role-staff .info .role-icon::before {
+#chat .item.msg.role-staff .info .role-icon::before {
     content: "\f0ad";
     color: var(--role-staff);
 } /* wrench */
 
-#chat .item.chat.role-editor .info .role-icon::before {
+#chat .item.msg.role-editor .info .role-icon::before {
     content: "\e131";
     color: var(--role-editor);
 } /* clapperboard */
 
 /* POP: Moderator — shield-halved + green glow */
-#chat .item.chat.role-mod .info .role-icon::before {
+#chat .item.msg.role-mod .info .role-icon::before {
     content: "\f3ed"; /* shield-halved */
     color: var(--role-mod);
     font-size: 11px;
@@ -692,7 +713,7 @@ body {
 }
 
 /* POP: Lead Moderator — gavel with strong glow, one tier above mod */
-#chat .item.chat.role-lead-mod .info .role-icon::before {
+#chat .item.msg.role-lead-mod .info .role-icon::before {
     content: "\f0e3"; /* gavel */
     color: var(--role-mod);
     font-size: 12px;
@@ -704,7 +725,7 @@ body {
    camera icon draws attention on insertion but settles afterwards. An
    always-animating icon on a permanent on-screen presence (the streamer
    posts constantly) flattens hierarchy when events/first-chatters also pulse. */
-#chat .item.chat.streamer .info .role-icon::before {
+#chat .item.msg.streamer .info .role-icon::before {
     content: "\f03d"; /* video */
     color: var(--role-streamer);
     font-size: 11px;
@@ -814,15 +835,15 @@ body {
    GROUPED MESSAGES — same user consecutive
    ========================================================= */
 
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .platform,
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .user,
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .timestamp,
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .pronouns,
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .badges,
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .role-icon {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .platform,
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .user,
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .timestamp,
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .pronouns,
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .badges,
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .role-icon {
     visibility: hidden;
 }
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped {
     margin-top: -2px !important;
 }
 
@@ -837,12 +858,12 @@ body {
 /* Reset per-platform module margin hacks that inset first-chatter rows
    (e.g. Twitch's `margin: 0 10px`) — we want the row aligned to the chat
    gutter just like every other row so the user + tile columns line up. */
-#chat:not(.horizontal):not(.oneline) .item.chat.first-chatter {
+#chat:not(.horizontal):not(.oneline) .item.msg.first-chatter {
     margin-left: 0 !important;
     margin-right: 0 !important;
 }
 
-#chat:not(.horizontal):not(.oneline) .item.chat.first-chatter .message {
+#chat:not(.horizontal):not(.oneline) .item.msg.first-chatter .message {
     grid-template-columns: var(--chatrd-user-col) var(--chatrd-tile) max-content !important;
     background: none !important;
     border: none !important;
@@ -860,7 +881,7 @@ body {
    `outline-offset: -1px` tucks the dash onto the rounded-corner edge (modern
    browsers respect `border-radius` for outlines) so it sits exactly where an
    inset box-shadow would without shifting content. */
-#chat:not(.horizontal):not(.oneline) .item.chat.first-chatter .actual-message {
+#chat:not(.horizontal):not(.oneline) .item.msg.first-chatter .actual-message {
     max-width: min(100%, 60ch);
     padding: 2px 10px 2px 8px !important;
     background: transparent !important;
@@ -871,7 +892,7 @@ body {
     position: relative;
 }
 /* Leading icon — "user-plus" reads as "new person joining", clearer than a sparkle. */
-#chat:not(.horizontal):not(.oneline) .item.chat.first-chatter .actual-message::before {
+#chat:not(.horizontal):not(.oneline) .item.msg.first-chatter .actual-message::before {
     content: "\f234"; /* user-plus (FA Free) */
     font-family: "Font Awesome 7 Free", "Font Awesome 6 Free";
     font-weight: 900;
@@ -1002,7 +1023,7 @@ body {
    tinted background + border. */
 /* Mention row: grid unchanged (columns align with normal rows).
    Only the .actual-message is bubbled — username + tile stay plain. */
-#chat:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .message {
+#chat:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .message {
     --mention-color: 145, 70, 255; /* twitch default */
     grid-template-columns: var(--chatrd-user-col) var(--chatrd-tile) max-content !important;
     background: none !important;
@@ -1016,20 +1037,20 @@ body {
    by the fill's alpha transition against the chat background. Keeping this
    channel clean means a mention + first-chatter combo shows both at once:
    amber dashed outline over the platform fill, neither signal lost. */
-#chat:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .actual-message {
+#chat:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .actual-message {
     max-width: 100%; /* let the grid cell bound us — 60ch blew past the gutter on narrow sources */
     min-width: 0; /* allow shrinking inside the grid/flex context */
     padding: 2px 10px !important;
     background: rgba(var(--mention-color), 0.22) !important;
     border-radius: var(--chatrd-radius-md) !important;
 }
-#chat:not(.horizontal):not(.oneline) .item.youtube.chat.streamer-mentioned .message {
+#chat:not(.horizontal):not(.oneline) .item.youtube.msg.streamer-mentioned .message {
     --mention-color: 255, 0, 51;
 }
-#chat:not(.horizontal):not(.oneline) .item.tiktok.chat.streamer-mentioned .message {
+#chat:not(.horizontal):not(.oneline) .item.tiktok.msg.streamer-mentioned .message {
     --mention-color: 255, 0, 80;
 }
-#chat:not(.horizontal):not(.oneline) .item.kick.chat.streamer-mentioned .message {
+#chat:not(.horizontal):not(.oneline) .item.kick.msg.streamer-mentioned .message {
     --mention-color: 83, 252, 24;
 }
 
@@ -1153,11 +1174,11 @@ body {
 }
 
 /* Icon chip — matches `.event .info .avatar` (color-mix bg + inset border).
-   Announcement rows carry both `.item.chat` + `.announcement`, and the chatrd
-   skin hides `.item.chat .info .avatar` via a `#chat:not(.horizontal):not(.oneline)`
+   Announcement rows carry both `.item.msg` + `.announcement`, and the chatrd
+   skin hides `.item.msg .info .avatar` via a `#chat:not(.horizontal):not(.oneline)`
    qualified rule. We match that specificity by qualifying the same way. */
-#chat:not(.horizontal):not(.oneline) .item.chat.announcement .info .avatar,
-#chat:not(.horizontal):not(.oneline) .item.chat.announcement .info .avatar:empty,
+#chat:not(.horizontal):not(.oneline) .item.msg.announcement .info .avatar,
+#chat:not(.horizontal):not(.oneline) .item.msg.announcement .info .avatar:empty,
 #chat-toasts .item.announcement .info .avatar,
 #chat-toasts .item.announcement .info .avatar:empty {
     position: absolute !important;
@@ -1882,7 +1903,7 @@ body {
     }
 }
 
-#chat .item.chat {
+#chat .item.msg {
     animation: chatrd-chat-in 220ms var(--ease-out) both;
 }
 #chat .event {
@@ -1898,12 +1919,12 @@ body {
        union of all `animation: ...` selectors we set — if you add a new
        animation elsewhere, add its selector here. Individual animation
        declarations already use `!important`, so we match that. */
-    #chat .item.chat,
+    #chat .item.msg,
     #chat .event,
     #chat-toasts .event,
     #chat-toasts .event .info .avatar,
     #chat .event .info .avatar,
-    #chat .item.chat.streamer .info .role-icon::before,
+    #chat .item.msg.streamer .info .role-icon::before,
     #chat .item.first-chatter .actual-message::before,
     #chat .item .actual-message img,
     #chat .item .actual-message img.gigantified {

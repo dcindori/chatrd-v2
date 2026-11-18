@@ -2,14 +2,13 @@
 /* KICK MODULE VARIABLES */
 /* ---------------------- */
 
-const showKick                      = getURLParam("showKick", false);
+let isPusherConnected = false;
 
-const kickUserName                  = getURLParam("kickUserName", "");
+const showKick                      = getURLParam("showKick", false);
 
 const showKickMessages              = getURLParam("showKickMessages", true);
 const showKickFollows               = getURLParam("showKickFollows", true);
 const showKickKicks                 = getURLParam("showKickKicks", true);
-const showSmallKicksGifts           = getURLParam("showSmallKicksGifts", false);
 const showKickSubs                  = getURLParam("showKickSubs", true);
 const showKickGiftedSubs            = getURLParam("showKickGiftedSubs", true);
 const showKickMassGiftedSubs        = getURLParam("showKickMassGiftedSubs", true);
@@ -18,13 +17,9 @@ const showKickRewardRedemptions     = getURLParam("showKickRewardRedemptions", t
 const showKickRaids                 = getURLParam("showKickRaids", true);
 const showKickViewers               = getURLParam("showKickViewers", true);
 
-let kickStreamer = null;
-
 const kickAvatars = new Map();
 const kick7TVEmojis = new Map();
 const kickSubBadges = [];
-
-const kickWebSocketURL = 'wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679?protocol=7&client=js&version=8.4.0&flash=false';
 
 const kicksGiftsClasses = [
     { min: 1,  max: 9, class: 'normal-gift' },
@@ -39,41 +34,118 @@ const kicksGiftsClasses = [
     { min: 100000,  max: 99999999999, class: 'bigger-than-100000' },
 ];
 
+const kicksGiftsImages = [
+    { min: 500,  max: 999,  url: 'https://static.kick.com/kicks/gifts/500-kick-bundle.webp' },
+    { min: 1000,  max: 1999,  url: 'https://static.kick.com/kicks/gifts/1000-kick-bundle.webp' },
+    { min: 2000,  max: 4999,  url: 'https://static.kick.com/kicks/gifts/2000-kick-bundle.webp' },
+    { min: 5000,  max: 9999,  url: 'https://static.kick.com/kicks/gifts/5000-kick-bundle.webp' },
+    { min: 10000,  max: 24999,  url: 'https://static.kick.com/kicks/gifts/10000-kick-bundle.webp' },
+    { min: 25000,  max: 99999999999,  url: 'https://static.kick.com/kicks/gifts/25000-kick-bundle.webp' },
+];
+
 
 // KICK EVENTS HANDLERS
 
 const kickMessageHandlers = {
 
-    /*'Kick.ChatMessage': (response) => {\
-        kickChatMessage(response.data);
-    },*/
     'Kick.Follow': (response) => {
         kickFollowMessage(response.data);
+    },
+
+    'Kick.ChatMessage': (response) => {
+        kickChatMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.RewardRedemption': (response) => {
+        kickRewardRedemptionFromStreamerBot(response.data);
+    },
+
+    'Kick.Subscription': (response) => {
+        kickSubMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.Resubscription': (response) => {
+        kickSubMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.GiftSubscription': (response) => {
+        kickGiftMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.MassGiftSubscription': (response) => {
+        kickMassGiftMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.KicksGifted': (response) => {
+        kickKicksGiftedMessageFromStreamerBot(response.data);
+    },
+
+    'Kick.UserTimedOut': (response) => {
+        kickUserBanned({
+            banned_by: {
+                username: response.data.moderator.name
+            },
+            permanent: false,
+            duration: Math.floor(response.data.duration/60),
+            user: {
+                slug : response.data.user.login.toLowerCase(),
+                username : response.data.user.name
+            }
+        });
+    },
+
+    'Kick.UserBanned': (response) => {
+        kickUserBanned({
+            banned_by: {
+                username: response.data.moderator.name
+            },
+            permanent: true,
+            user: {
+                slug : response.data.user.name.toLowerCase(),
+                username : response.data.user.name
+            }
+        });
+    },
+
+    'Kick.ViewerCountUpdate': (response) => {
+        kickUpdateStatistics(response.data);
     },
 
 };
 
 
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (showKick) {
 
-        const kickStatistics = `
-            <div class="platform" id="kick" style="display: none;">
-                <img src="js/modules/kick/images/logo-kick.svg" alt="">
-                <span class="viewers"><i class="fa-solid fa-user"></i> <span>0</span></span>
-            </div>
-        `;
+        if ((showKickViewers == true) && (showPlatformStatistics == true)) {
+            const kickStatistics = `
+                <div class="platform" id="kick" style="display: none;">
+                    <img src="js/modules/kick/images/logo-kick.svg" alt="">
+                    <span class="viewers"><i class="fa-solid fa-user"></i> <span>0</span></span>
+                </div>
+            `;
+            document.querySelector('#statistics').insertAdjacentHTML('beforeend', kickStatistics);
+            document.querySelector('#statistics #kick').style.display = '';        
+        }
 
-        document.querySelector('#statistics').insertAdjacentHTML('beforeend', kickStatistics);
+        waitForStreamerBot('Kick').then(() => {
+            registerPlatformHandlersToStreamerBot(kickMessageHandlers, '[ChatRD][Streamer.bot][Kick]');
 
-        if (showKickViewers == true) { document.querySelector('#statistics #kick').style.display = ''; }
+            (async () => {
 
-        console.debug('[Kick][Debug] DOMContentLoaded fired');
+                const kickStreamerLogin = await getStreamerInfo();
+                console.log('Kick streamer data: ', kickStreamerLogin.platforms.kick);
+                const kickUserId = kickStreamerLogin.platforms.kick.broadcasterUserId;
+                const kick7TVEmotes = await getKick7TVEmotes(kickUserId);
+                if (kick7TVEmotes != null) {
+                    kick7TVEmotes.forEach(emote => kick7TVEmojis.set(emote.name, emote.url));
+                }
 
-        registerPlatformHandlersToStreamerBot(kickMessageHandlers, '[Kick][SB1]');
+            })();
+
+        });
         
-        kickConnection();
     }
     
 });
@@ -86,189 +158,21 @@ document.addEventListener('DOMContentLoaded', () => {
 // -----------------------
 // KICK CONNECT HANDLER
 
-async function kickConnection() {
-    if (!kickUserName) return;
-
-    const kickMaxTries = 20;
-    const kickReconnectDelay = 10000;
-    let retryCount = 0;
-    
-
-
-    async function connect() {
-        try {
-            const kickUserInfo = await kickGetUserInfo(kickUserName);
-            const kickUserId = kickUserInfo.user_id;
-
-            if (!kickUserInfo || !kickUserInfo.chatroom || !kickUserInfo.chatroom.id) {
-                throw new Error('Chatroom ID not found');
-            }
-
-            console.debug(`[Kick] User info for ${kickUserName}!`, kickUserInfo);
-
-            const kickChatRoomId = kickUserInfo.chatroom.id;
-            const kickChannelId = kickUserInfo.chatroom.channel_id;
-
-            if (!kickChatRoomId) {
-                console.error(`[Kick] Could not find chatroom id for ${kickUserName}!`);
-                return;
-            }
-            
-            console.debug(`[Kick] Chatroom for ${kickUserName} Found! (ID: ${kickChatRoomId})`);
-            
-            kickSubBadges.push(...kickUserInfo.subscriber_badges);
-
-            const kickWebSocket = new WebSocket(kickWebSocketURL);
-
-            kickWebSocket.onopen = () => {
-                kickConnectionState = true;
-                retryCount = 0;
-
-                console.debug(`[Kick] Connected to Kick!`);
-                notifySuccess({
-                    title: 'Connected to Kick',
-                    text: `User set to <strong>${kickUserName}</strong>.`
-                });
-
-
-                
-                // Getting 7TV User Emotes and Global Emotes
-                (async () => {
-                    const kick7TVEmotes = await getKick7TVEmotes(kickUserId);
-                    if (kick7TVEmotes != null) {
-                        kick7TVEmotes.forEach(emote => {
-                            kick7TVEmojis.set(emote.name, emote.url);
-                        });
-                    }
-                })();
-
-
-
-
-                if (showKickViewers === true) {
-                    setInterval(() => {
-                        kickGetUserInfo(kickUserName).then(data => {
-                            kickUpdateStatistics(data);
-                        });
-                    }, 15000);
-                }
-            };
-
-            kickWebSocket.onmessage = (response) => {
-                const data = JSON.parse(response.data);
-                const kickData = JSON.parse(data.data);
-                const kickEvent = data.event.split('\\').pop();
-
-                console.debug(`[Kick] ${kickEvent}`, kickData);
-
-                if (data.event === 'pusher:connection_established') {
-                    
-                    console.debug(`[Kick][Pusher] Connection established! (ID:${kickData.socket_id})`);
-
-                    const channels = [
-                        `chatroom_${kickChatRoomId}`,
-                        `chatrooms.${kickChatRoomId}`,
-                        `chatrooms.${kickChatRoomId}.v2`,
-                        `predictions-channel-${kickChatRoomId}`,
-                        `channel_${kickChannelId}`
-                    ];
-
-                    channels.forEach(channel => {
-                        kickWebSocket.send(JSON.stringify({
-                            event: 'pusher:subscribe',
-                            data: { channel }
-                        }));
-                    });
-                }
-
-                if (data.event === "pusher:ping") {
-                    kickWebSocket.send(JSON.stringify({
-                        event: "pusher:pong",
-                        data: {}
-                    }));
-                }
-
-                switch (kickEvent) {
-                    case 'ChatMessageEvent': kickChatMessage(kickData); break;
-                    case 'SubscriptionEvent': kickSubMessage(kickData); break;
-                    case 'GiftedSubscriptionsEvent': kickGiftMessage(kickData); break;
-                    case 'RewardRedeemedEvent': kickRewardRedemption(kickData); break;
-                    case 'StreamHostEvent': kickRaidMessage(kickData); break;
-                    case 'MessageDeletedEvent': kickChatMessageDeleted(kickData); break;
-                    case 'UserBannedEvent': kickUserBanned(kickData); break;
-                    case 'ChatroomClearEvent': kickChatClearMessages(); break;
-                    case 'KicksGifted': kickKicksGiftedMessage(kickData); break;
-                }
-            };
-
-            kickWebSocket.onclose = (event) => {
-                setTimeout(connect, kickReconnectDelay);
-
-                /*console.warn(`[Kick] WebSocket closed (code: ${event.code})`);
-
-                if (retryCount < kickMaxTries) {
-                    retryCount++;
-                    notifyError({
-                        title: 'Kick Disconnected',
-                        text: `Retrying in ${kickReconnectDelay / 1000}s (${retryCount}/${kickMaxTries})`
-                    });
-                    setTimeout(connect, kickReconnectDelay);
-                } else {
-                    notifyError({
-                        title: 'Kick Reconnect Failed',
-                        text: `Maximum retries (${kickMaxTries}) reached.`
-                    });
-                }*/
-            };
-
-            kickWebSocket.onerror = (error) => {
-                console.error('[Kick] WebSocket error:', error);
-                kickWebSocket.close();
-            };
-
-        }
-        catch (error) {
-            setTimeout(connect, kickReconnectDelay);
-            
-            /*console.error(`[Kick] Failed to connect: ${error.message}`);
-
-            if (retryCount < kickMaxTries) {
-                retryCount++;
-                notifyError({
-                    title: 'Kick Connection Error',
-                    text: `Retrying in ${kickReconnectDelay / 1000}s (${retryCount}/${kickMaxTries})`
-                });
-                setTimeout(connect, kickReconnectDelay);
-            } else {
-                notifyError({
-                    title: 'Kick Reconnect Failed',
-                    text: `Maximum retries (${kickMaxTries}) reached.`
-                });
-            }*/
-        }
-    }
-
-    return await connect();
-}
-
-
-
-
 
 // ---------------------------
 // KICK UTILITY FUNCTIONS
 
-async function kickChatMessage(data) {
+async function kickChatMessageFromStreamerBot(data) {
     
     if (showKickMessages == false) return;
-    if (ignoreUserList.includes(data.sender.username.toLowerCase())) return;
-    if (data.content.startsWith("!") && excludeCommands == true)  return;
+    if (ignoreUserList.includes(data.user.login.toLowerCase())) return;
+    if (data.text.startsWith("!") && excludeCommands == true)  return;
 
 	const template = chatTemplate;
 	const clone = template.content.cloneNode(true);
-    const messageId = data.id;
-    const userId = data.sender.id;
-    const userSlug = data.sender.slug;
+    const messageId = data.messageId;
+    const userId = data.user.id;
+    const userSlug = data.user.login;
 
     const {
         'first-message': firstMessage,
@@ -289,53 +193,56 @@ async function kickChatMessage(data) {
             .map(el => [el.className, el])
     );
 
-    const classes = ['kick', 'chat'];
+    const classes = ['kick', 'msg'];
 
-    if (userSlug == kickUserName) classes.push('streamer');
+    if (data.user.role == 4) classes.push('streamer');
 
-    const [avatarImage, messageHTML, badgesHTML] = await Promise.all([
-        getKickAvatar(data.sender.slug),
-        getKickEmotes(data.content),
-        getKickBadges(data.sender.identity.badges),
+    const avatarImage = data.user.profilePicture;
+
+    const [messageHTML, badgesHTML, roles] = await Promise.all([
+        getKickEmotes(data.text),
+        getKickBadgesFromStreamerBot(data.user.badges),
+        getKickRolesFromStreamerBot(data.user.badges)
     ]);
 
     header.remove();
     firstMessage.remove();
 
-
+    if (roles.length == 0) roles.push('user');
+    classes.push(...roles);
     
-
-    if (isOBS == false) {
-        if (kickStreamer == null) {
-            const streamerInfo = await getStreamerInfo();
-            kickStreamer = streamerInfo.platforms.kick;
-        }
-
-        if (data.content.toLowerCase().includes( kickStreamer.broadcasterUserName.toLowerCase() )) {
-            classes.push('streamer-mentioned');
-        }
+    const kickStreamer = streamerInfo.get.platforms.kick.broadcasterUserName;
+    
+    if (data.text.toLowerCase().includes( kickStreamer.toLowerCase() )) {
+        classes.push('streamer-mentioned');
     }
 
 
+    const userLinkElement = user.querySelector('a');
+    const userLink = `https://kick.com/${ userSlug }`;
 
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.style = `--user-color: ${data.user.color}`;
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
 
-    user.textContent = data.sender.username;
     message.innerHTML = messageHTML;
 
     if (showAvatar) {
-        avatar.dataset.initial = (data.sender.username || '?')[0].toUpperCase();
+        avatar.dataset.initial = (data.user.name || '?')[0].toUpperCase();
         avatar.innerHTML = `<img src="${avatarImage}" onerror="this.style.display='none'">`;
     } else avatar.remove();
     if (showBadges) {
         if (!badgesHTML) { badges.remove(); }
         else { badges.innerHTML = badgesHTML; }
-     }
+    }
     else { badges.remove(); }
 
-    if (data.type == "reply") {
+    if (data.isReply) {
         classes.push('reply');
-        var replyHTML = await getKickEmotes(data.metadata.original_message.content);
-        reply.insertAdjacentHTML('beforeend', `<strong>@${data.metadata.original_sender.username}</strong><span class="reply-body">${replyHTML}</span>`);
+        var replyHTML = await getKickEmotes(data.reply.content);
+        reply.insertAdjacentHTML('beforeend', `<strong>@${escapeHTML(data.reply.sender.name)}</strong><span class="reply-body">${replyHTML}</span>`);
     }
     else { reply.remove(); }
 
@@ -345,8 +252,6 @@ async function kickChatMessage(data) {
     addMessageItem('kick', clone, classes, userSlug, messageId);
 }
 
-
-
 async function kickFollowMessage(data) {
 
     if (showKickFollows == false) return;
@@ -355,7 +260,6 @@ async function kickFollowMessage(data) {
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
     const userId = data.user.login.toLowerCase();
-    //const userId = data.userName.toLowerCase();
 
     const {
         header,
@@ -374,9 +278,8 @@ async function kickFollowMessage(data) {
     header.remove();
     
     user.textContent = data.user.name;
-    //user.innerHTML = `<strong>${data.userName}</strong>`;
 
-    action.innerHTML = ` followed you`;
+    action.innerHTML = tRD('kick.follow_action');
     
     value.remove()
 
@@ -385,16 +288,14 @@ async function kickFollowMessage(data) {
     addEventItem('kick', clone, classes, userId, messageId);
 }
 
-
-
-async function kickKicksGiftedMessage(data) {
+async function kickKicksGiftedMessageFromStreamerBot(data) {
 
     if (showKickKicks == false) return;
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
-    const userId = data.sender.username.toLowerCase();
+    const userId = data.sender.name.toLowerCase();
 
     const {
         header,
@@ -410,47 +311,58 @@ async function kickKicksGiftedMessage(data) {
 
     const classes = ['kick', 'kicksgifted'];
 
-    if (showSmallKicksGifts == true) { classes.push('small-gift'); }
 
     header.remove();
 
-    var kicksGiftId = data.gift.gift_id.replace('_', '-');
-    var kicksGiftImage = `<img class="gift-image" src="https://files.kick.com/kicks/gifts/${kicksGiftId}.webp" alt="${data.gift.name}">`;
+    var kicksGift = data.gift.amount > 1 ? tRD('kick.kicks_plural') : tRD('kick.kicks_singular');
     
-    user.textContent = data.sender.username;
-    action.innerHTML = ` sent a <strong>${data.gift.name}</strong> `;
+    user.textContent = data.sender.name;
+    action.innerHTML = `${tRD('kick.kicksgift_action')} <strong>${data.gift.amount} ${kicksGift}</strong>`;
 
     const kicksMatch = kicksGiftsClasses.find(lv => data.gift.amount >= lv.min && data.gift.amount <= lv.max);
     classes.push(kicksMatch.class);
 
-    var kicksGift = data.gift.amount > 1 ? 'Kicks' : 'Kick';
-    value.innerHTML = `
-        <div class="gift-info">
-            <span class="gift-image">${kicksGiftImage}</span>
-            <span class="gift-value"><img src="js/modules/kick/images/icon-kicksgift.svg" alt="${kicksGift}"> ${data.gift.amount}</span>
-        </div>
-    `;
+    let giftHtml;
+    
+    if (data.gift.amount >= 500) {
 
-    if (!data.message) { message.remove(); }
+        const kicksGiftMatch = kicksGiftsImages.find(lv => data.gift.amount >= lv.min && data.gift.amount <= lv.max);
+        const rotateDeg = (Math.random() * 60 - 30).toFixed(1) + 'deg';
+        var kicksGiftImage = `<img style="--rotateGift: ${rotateDeg}" class="gift-image" src="${kicksGiftMatch.url}" alt="${data.gift.amount} Kicks">`;
+
+        giftHtml = renderGiftEventSuffix({
+            image : `${kicksGiftImage}`, 
+            value : `<img src="js/modules/kick/images/icon-kicksgift.svg" alt="${kicksGift}"> ${data.gift.amount}`
+        });
+
+        value.innerHTML = giftHtml;
+    }
     else {
-        var kicksMessage = await getKickEmotes(data.message);
+        giftHtml = renderGiftEventSuffix({
+            image : ``, 
+            value : `<img src="js/modules/kick/images/icon-kicksgift.svg" alt="${kicksGift}"> ${data.gift.amount}`
+        });
+
+        value.innerHTML = giftHtml;
+    }
+
+    if (!data.gift.message) { message.remove(); }
+    else {
+        var kicksMessage = await getKickEmotes(data.gift.message);
         message.innerHTML = kicksMessage;
     }
 
     addEventItem('kick', clone, classes, userId, messageId);
 }
 
-
-
-
-async function kickSubMessage(data) {
+async function kickSubMessageFromStreamerBot(data) {
 
     if (showKickSubs == false) return;
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
-    const userId = data.username.toLowerCase();
+    const userId = data.user.name.toLowerCase();
 
     const {
         header,
@@ -468,12 +380,11 @@ async function kickSubMessage(data) {
 
     header.remove();
 
-    user.textContent = data.username;
+    user.textContent = data.user.name;
 
-    action.innerHTML = ` subscribed for `;
+    action.innerHTML = tRD('kick.sub_action');
 
-    //var months = data.months > 1 ? 'months' : 'month';
-    var months = formatSubMonthDuration(data.months);
+    var months = formatSubMonthDuration(data.duration);
     
     value.innerHTML = `<strong>${months}</strong>`;
 
@@ -482,16 +393,21 @@ async function kickSubMessage(data) {
     addEventItem('kick', clone, classes, userId, messageId);
 }
 
-
-
-async function kickGiftMessage(data) {
+async function kickGiftMessageFromStreamerBot(data) {
 
     if (showKickGiftedSubs == false) return;
+    
+    kickGiftSingleSub(data.user.name, data.recipient.name)
+}
+
+async function kickMassGiftMessageFromStreamerBot(data) {
+
+    if (showKickGiftedSubs == false || showKickGiftedSubsUserTrain == false) return;
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
-    const userId = data.gifter_username.toLowerCase();
+    const userId = data.user.name.toLowerCase();
 
     const {
         header,
@@ -510,30 +426,23 @@ async function kickGiftMessage(data) {
     header.remove();
 
     
-    user.textContent = data.gifter_username;
+    user.textContent = data.user.name;
 
-    var giftedLength = data.gifted_usernames.length;
+    var giftedLength = data.recipients.length;
     
-    if (giftedLength > 1 && showKickMassGiftedSubs == true) {
-        action.innerHTML = ` gifted <strong>${giftedLength} subs</strong> to the Community`;
-        message.innerHTML = `They've gifted a total of <strong>${data.gifter_total} subs</strong>`;
-        value.remove();
+    action.innerHTML = tRD('kick.giftbomb_action', { count: giftedLength });
+    //message.innerHTML = tRD('kick.giftbomb_message', { total: data.gifter_total });
+    message.remove();
+    value.remove();
 
-        if (showKickGiftedSubsUserTrain == true) {    
-            for (recipients of data.gifted_usernames) {
-                kickGiftSingleSub(data.gifter_username, recipients);
-            }   
-        }
-        
-        addEventItem('kick', clone, classes, userId, messageId);
+    for (recipients of data.recipients) {
+        kickGiftSingleSub(data.user.name, recipients.name);
     }
-    else {
-        kickGiftSingleSub(data.gifter_username, data.gifted_usernames[0]);
-    }
+
+    addEventItem('kick', clone, classes, userId, messageId);
+    
     
 }
-
-
 
 async function kickGiftSingleSub(gifter, recipient) {
     const template = eventTemplate;
@@ -560,23 +469,21 @@ async function kickGiftSingleSub(gifter, recipient) {
 
     user.textContent = gifter;
 
-    action.innerHTML = ` gifted a subscription to `;
+    action.innerHTML = tRD('kick.giftsub_single_action');
     
     value.innerHTML = `<strong>${escapeHTML(recipient)}</strong>`;
 
     addEventItem('kick', clone, classes, userId, messageId);
 }
 
-
-
-async function kickRewardRedemption(data) {
+async function kickRewardRedemptionFromStreamerBot(data) {
 
     if (showKickRewardRedemptions == false) return;
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
-    const userId = data.username.toLowerCase();
+    const userId = data.redeemer.name.toLowerCase();
 
     const {
         header,
@@ -594,27 +501,40 @@ async function kickRewardRedemption(data) {
 
     header.remove();
 
-    user.textContent = data.username;
-    action.innerHTML = ` redeemed `;
-    value.innerHTML = `<strong>${data.reward_title}</strong>`;
+    user.textContent = data.redeemer.name;
+    action.innerHTML = tRD('kick.reward_action');
+
+    const giftHtml = renderGiftEventSuffix({
+        image : `<strong>${data.reward.title}</strong>`, 
+        value : `<img src="js/modules/kick/images/icon-channel-points.svg" alt="Channel Points"> ${data.reward.cost}`
+    });
+
+    value.innerHTML = `${giftHtml}`;
     
-    var userInput = data.user_input ? `${data.user_input}` : '';
+    var userInput = data.description ? `${data.description}` : '';
     message.innerHTML = `${userInput}`;
 
     addEventItem('kick', clone, classes, userId, messageId);
 }
 
+async function kickChatMessageDeleted(data) {
+    document.getElementById(data.message.id)?.parentNode.remove();
+}
 
+async function kickUserBanned(data) {
+    chatContainer.querySelectorAll(`[data-user="${data.user.slug}"]`).forEach(element => {
+        element.parentNode.remove();
+    });
 
+    if (!chatField) return;
 
-async function kickRaidMessage(data) {
-
-    if (showKickRaids == false) return;
+    let description;
+    let type = data.permanent ? 'ban' : 'timeout';
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
-    const userId = data.host_username.toLowerCase();
+    const userId = createRandomString(40);
 
     const {
         header,
@@ -628,98 +548,105 @@ async function kickRaidMessage(data) {
             .map(el => [el.className, el])
     );
 
-    const classes = ['kick', 'raid'];
+    const classes = ['kick', 'hidden-event', 'user-banned'];
+
+    const targetUser = data.user.username;
+    const targetLogin = data.user.slug;
+    const moderator = data.banned_by.username;
+
+    const userLinkElement = user.querySelector('a');
+    const userLink = `https://kick.com/${targetLogin}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = targetUser;
+    userLinkElement.title = `${targetUser} @ ${userLink}`;
+
+    if (type == 'timeout') {
+        const duration = convertTime((data.duration * 60) * 1000);
+        description = tRD('kick.timeout_action', { user: moderator, duration: `${duration}`});
+    }
+
+    if (type == 'ban') {
+        description = tRD('kick.ban_action', { user: moderator });
+    }
 
     header.remove();
-    message.remove();
+    value.remove();
+    action.innerHTML = `${description}`;
 
-    user.textContent = data.host_username;
-
-    var viewers = data.number_viewers > 1 ? 'viewers' : 'viewer';
-    action.innerHTML = ` hosted the channel with `;
-    value.innerHTML = `<strong>${data.number_viewers} ${viewers}</strong>`;
-
-    addEventItem('kick', clone, classes, userId, messageId);
+    addHiddenEventItem('kick', clone, classes, userId, messageId);
 }
 
+async function kickUserUnBanned(data) {
 
+    if (!chatField) return;
 
+    let description;
+    let type = data.permanent ? 'ban' : 'timeout';
 
+    const template = eventTemplate;
+	const clone = template.content.cloneNode(true);
+    const messageId = createRandomString(40);
+    const userId = createRandomString(40);
 
-async function kickChatMessageDeleted(data) {
-    document.getElementById(data.message.id)?.remove();
+    const {
+        header,
+        platform,
+        user,
+        action,
+        value,
+        'actual-message': message
+    } = Object.fromEntries(
+        [...clone.querySelectorAll('[class]')]
+            .map(el => [el.className, el])
+    );
+
+    const classes = ['kick', 'hidden-event', 'user-unbanned'];
+
+    const targetUser = data.user.username;
+    const targetLogin = data.user.slug;
+    const moderator = data.unbanned_by.username;
+
+    const userLinkElement = user.querySelector('a');
+    const userLink = `https://kick.com/${targetLogin}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = targetUser;
+    userLinkElement.title = `${targetUser} @ ${userLink}`;
+
+    if (type == 'timeout') {
+        description = tRD('kick.untimeout_action', { user: moderator });
+    }
+
+    if (type == 'ban') {
+        description = tRD('kick.unban_action', { user: moderator });
+    }
+
+    header.remove();
+    value.remove();
+    action.innerHTML = `${description}`;
+
+    addHiddenEventItem('kick', clone, classes, userId, messageId);
 }
-
-
-
-async function kickUserBanned(data) {
-    chatContainer.querySelectorAll(`[data-user="${data.user.slug}"]`).forEach(element => {
-        element.remove();
-    });
-}
-
-
 
 async function kickChatClearMessages() {
     chatContainer.querySelectorAll(`.item.kick`).forEach(element => {
-        element.remove();
+        element.parentNode.remove();
     });
 }
 
-
-
 async function kickUpdateStatistics(data) {
     if (showPlatformStatistics == false || showKickViewers == false) return;
-    if (data.livestream == null) { }
-    else {
-        const viewers = formatNumber(DOMPurify.sanitize(data.livestream.viewer_count)) || "0";
-        document.querySelector('#statistics #kick .viewers span').textContent = viewers;
-    }
-}
 
-
-
-async function kickGetUserInfo(user) {
-    const response = await fetch( `https://kick.com/api/v2/channels/${user}` );
+    const viewers = formatNumber(DOMPurify.sanitize(data.viewerCount))  || "0";
+    const span = document.querySelector('#statistics #kick .viewers span');
     
-    if (response.status === 404) {
-        console.error("[Kick] User was not found!");
-        return 404;
-    }
-    else {
-        const data = await response.json();
-        return data;
-    }
-}
+    span.textContent = viewers;
+    span.dataset.viewers = data.viewerCount;
 
-async function getKickAvatar(user) {
-    if (!showAvatar) return;
-
-    const DEFAULT_AVATAR = 'https://kick.com/img/default-profile-pictures/default2.jpeg';
-
-    if (kickAvatars.has(user)) {
-        console.debug(`[Kick] Kick avatar found for ${user}!`);
-        return kickAvatars.get(user);
-    }
-
-    console.debug(`[Kick] Kick avatar not found for ${user}! Trying to get it...`);
-
-    try {
-        const response = await kickGetUserInfo(user);
-        const rawPic = response?.user?.profile_pic;
-
-        const avatarUrl = (typeof rawPic === "string" && rawPic)
-          ? rawPic.replace(/fullsize\.webp$/, "medium.webp")
-          : DEFAULT_AVATAR;
-
-        kickAvatars.set(user, avatarUrl);
-        return avatarUrl;
-    }
-    
-    catch (error) {
-        console.warn(`[Kick] Error getting Kick avatar for ${user}:`, error);
-        return DEFAULT_AVATAR;
-    }
+    combinedViewerStatistics();
 }
 
 
@@ -732,7 +659,7 @@ async function getKickEmotes(text) {
 async function parseKickEmojis(content) {
     const message = content;
     const messagewithemotes = message.replace(/\[emote:(\d+):([^\]]+)\]/g, (_, id, name) => {
-        return `<img src="https://files.kick.com/emotes/${id}/fullsize" alt="${name}" class="emote" >`;
+        return `<img src="https://files.kick.com/emotes/${id}/fullsize" alt="${name}" class="emote">`;
     });
 
     return messagewithemotes;
@@ -744,7 +671,7 @@ async function parseKick7TVEmotes(text) {
     const parsedWords = words.map(word => {
         if (kick7TVEmojis.has(word)) {
             const url = kick7TVEmojis.get(word);
-            return `<img src="${url}" alt="${word}" class="emote" />`;
+            return `<img src="${url}" alt="${word}" class="emote">`;
         }
         return word;
     });
@@ -752,12 +679,11 @@ async function parseKick7TVEmotes(text) {
     return parsedWords.join(' ');
 }
 
-
 async function getKick7TVEmotes(userId) {
     const userSet = await fetch(`https://7tv.io/v3/users/kick/${userId}`);
 
     if (userSet.status === 404) {
-        console.debug("[Kick] 7TV Profile based on this Kick user was not found");
+        console.debug("[ChatRD][Kick] 7TV Profile based on this Kick user was not found");
         return null;
     }
 
@@ -781,7 +707,7 @@ async function getKick7TVEmotes(userId) {
     const SevenTVEmotesFusion = [...gettingAllKick7TVEmotes, ...gettingAllGlobal7TVEmotes];
     
     if (SevenTVEmotesFusion != null) {
-        console.debug("[Kick] Getting all Kick's user 7TV Emojis + Globals", SevenTVEmotesFusion);
+        console.debug("[ChatRD][Kick] Getting all Kick's user 7TV Emojis + Globals", SevenTVEmotesFusion);
 
         SevenTVEmotesFusion.forEach(emote => {
             kick7TVEmojis.set(emote.name, emote.url);
@@ -789,26 +715,42 @@ async function getKick7TVEmotes(userId) {
     }
 }
 
-async function getKickBadges(badges) {
+
+
+async function getKickBadgesFromStreamerBot(badges) {
     const badgesArray = [];
     
     badges.forEach(badge => {
-        if (badge.type === 'subscriber') {
-            
-            const targetMonths = badge.count;
-
-            // Sort badges by months 
-            const eligibleBadges = kickSubBadges
-                .filter(badge => badge.months <= targetMonths)
-                .sort((a, b) => b.months - a.months); // sorts from highest to lowest
-
-            badgesArray.push(`<img src="${eligibleBadges[0]?.badge_image?.src || 'icons/badges/kick-subscriber.svg'}" class="badge">`);
+        if (badge.imageUrl) {
+            badgesArray.push(`<img src="js/modules/kick/images/badge-${badge.id}.svg" class="badge">`);
         }
         else {
-            badgesArray.push(`<img src="js/modules/kick/images/badge-${badge.type}.svg" class="badge">`);
+            if (badge.id === 'subscriber') {
+        
+                const targetMonths = badge.count;
+
+                const eligibleBadges = kickSubBadges
+                    .filter(badge => badge.months <= targetMonths)
+                    .sort((a, b) => b.months - a.months);
+
+                badgesArray.push(`<img src="${eligibleBadges[0]?.badge_image?.src || 'js/modules/kick/images/badge-subscriber.svg'}" class="badge">`);
+            }
+            else {
+                badgesArray.push(`<img src="js/modules/kick/images/badge-${badge.id}.svg" class="badge">`);
+            }
+
         }
     });
 
     return badgesArray.join(' ');
 }
 
+async function getKickRolesFromStreamerBot(roles) {
+    const rolesArray = [];
+    
+    roles.forEach(role => {
+        rolesArray.push(role.id);
+    });
+
+    return rolesArray;
+}

@@ -3,7 +3,6 @@
 /* ------------------------------ */
 
 const showStreamelements            = getURLParam("showStreamelements", false);
-
 const showStreamElementsTips        = getURLParam("showStreamElementsTips", true);
 
 const streamElementsHandlers = {
@@ -13,7 +12,7 @@ const streamElementsHandlers = {
 };
 
 if (showStreamelements) {
-    registerPlatformHandlersToStreamerBot(streamElementsHandlers, '[Streamelements]');
+    registerPlatformHandlersToStreamerBot(streamElementsHandlers, '[ChatRD][Streamelements]');
 }
 
 
@@ -22,7 +21,7 @@ async function streamElementsEventMessage(data) {
     if (showStreamElementsTips == false) return;
 
     const template = eventTemplate;
-	const clone = template.content.cloneNode(true);
+    const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
     const userId = createRandomString(40);
 
@@ -46,7 +45,10 @@ async function streamElementsEventMessage(data) {
     var money = formatCurrency(data.amount,data.currency);
 
     user.innerHTML = `<strong>${data.username}</strong>`;
-    action.innerHTML = ` donated `;
+
+    // Aplicação da tradução baseada no en.json
+    action.innerHTML = tRD('streamelements.donated_action');
+
     value.innerHTML = `<strong>${money}</strong>`;
     
     if (data.message) { message.innerHTML = `${data.message}`; }

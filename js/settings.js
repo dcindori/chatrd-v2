@@ -1,689 +1,1017 @@
-let streamerBotClient = null
-let streamerBotConnected = false;
-let kickWebSocket = null;
-let tikfinityWebSocket = null;
-let speakerBotClient = null;
+import {
+    allDefined,
+    registerIconLibrary
+} from 'https://ka-f.webawesome.com/webawesome@3.10.0/webawesome.loader.js';
 
 
+const streamerBot = {};
+const speakerBot = {};
+
+const sbRequiredActions = [
+    '[TikTok] Msgs',
+    '[Twitch] Fetch Goals',
+    '[Twitch][YouTube][Kick] Msgs/Cmds',
+    '[YouTube] Member Emotes'
+];
+
+let chatRDUrl;
+let youtubeEmotes;
 
 
-/* -------------------------
-   Salvar configurações no localStorage
--------------------------- */
-function saveSettingsToLocalStorage() {
-    const checkboxes = document.querySelectorAll("input[type=checkbox]:not(.avoid)");
-    const textfields = document.querySelectorAll("input[type=text]:not(.avoid)");
-    const numberfields = document.querySelectorAll("input[type=number]:not(.avoid)");
-    const colorfields = document.querySelectorAll("input[type=color]:not(.avoid)");
-    const selects = document.querySelectorAll("select:not(.avoid)");
-    const ranges = document.querySelectorAll("input[type=range]:not(.avoid)");
-    const settings = {};
-
-    checkboxes.forEach(cb => settings[cb.name] = cb.checked);
-    ranges.forEach(r => settings[r.name] = r.value);
-    textfields.forEach(tf => settings[tf.name] = tf.value);
-    numberfields.forEach(nf => settings[nf.name] = nf.value);
-    colorfields.forEach(cf => settings[cf.name] = cf.value);
-    selects.forEach(s => settings[s.name] = s.value);
-
-    localStorage.setItem("chatrdWidgetSettings", JSON.stringify(settings));
-
-    generateUrl();
-}
-
-
-async function saveYouTubeCustomEmotes() {
-    try {	
-    	const youtubeMemberEmotes = document.querySelector("textarea[name=youTubeCustomEmotes]:not(.avoid)");
-        youtubeSaveMemberEmotes(JSON.parse(youtubeMemberEmotes.value));
-    }
-	catch (err) {
-        console.error("[ChatRD] Emotes JSON inválido", err);
-    }
-}
-
-async function loadYouTubeCustomEmotes() {
-
-    youtubeLoadMemberEmotes().then(settings => {
-        if (settings) {
-    		const youtubeMemberEmotes = document.querySelector("textarea[name=youTubeCustomEmotes]:not(.avoid)");
-            console.log('[ChatRD][Settings] YouTube Member Emotes Loaded', settings);
-            youtubeMemberEmotes.value = JSON.stringify(settings);
-            populateEmoteList();
-        }
-    });
-    
-}
-
-/* -------------------------
-   Carregar configurações do localStorage
--------------------------- */
-async function loadSettingsFromLocalStorage() {
+/* ChatRD Functions */
+async function loadChatRDSettings() {
     const saved = localStorage.getItem("chatrdWidgetSettings");
-    if (!saved) return;
+    const settings = saved ? JSON.parse(saved) : {};
 
-    const settings = JSON.parse(saved);
+    document.querySelectorAll('[data-setting]:not([data-ignore])').forEach((el) => {
+        const key = el.dataset.setting;
+        const hasSavedValue = Object.prototype.hasOwnProperty.call(settings, key);
 
-    Object.keys(settings).forEach(key => {
-        const input = document.querySelector(`[name="${key}"]`);
-        if (input) {
-            if (input.type === "checkbox") {
-                input.checked = settings[key];
-            } else {
-                input.value = settings[key];
-            }
-        }
-    });
+        let value;
 
-    document.querySelector('#font-value').textContent = Math.floor(document.querySelector('#font-slider').value * 100) + '%';
-    document.querySelector('#bg-opacity-value').textContent = Math.floor(document.querySelector('#bg-opacity-slider').value * 100) + '%';
-}
-
-async function saveStreamerBotSettings() {
-    const streamerBotServerAddress = document.querySelector('input[type=text][name=streamerBotServerAddress]').value;
-    const streamerBotServerPort = document.querySelector('input[type=text][name=streamerBotServerPort]').value;
-
-    const settings = {
-        streamerBotServerAddress : streamerBotServerAddress,
-        streamerBotServerPort : streamerBotServerPort
-    }
-
-    localStorage.setItem("chatrdStreamerBotSettings", JSON.stringify(settings));
-}
-
-async function loadStreamerBotSettings() {
-    const saved = localStorage.getItem("chatrdStreamerBotSettings");
-    if (!saved) return;
-
-    const settings = JSON.parse(saved);
-
-    Object.keys(settings).forEach(key => {
-        const input = document.querySelector(`[type=text][name="${key}"]`);
-        input.value = settings[key];
-    });
-}
-
-
-function chatRdImportSettings(url) {
-    const qIndex = url.indexOf("?");
-    
-    if (qIndex === -1) return {};
-
-    const queryString = url.slice(qIndex + 1);
-    const params = new URLSearchParams(queryString);
-    const json = {};
-
-    for (const [key, value] of params.entries()) {
-      if (key === "") continue;
-
-      if (value === "true")       json[key] = true;
-      else if (value === "false") json[key] = false;
-      else if (value !== "" && !isNaN(value)) json[key] = Number(value);
-      else json[key] = decodeURIComponent(value);
-    }
-    
-    Object.keys(json).forEach(key => {
-        const input = document.querySelector(`[name="${key}"]`);
-        if (input) {
-            if (input.type === "checkbox") {
-                input.checked = json[key];
-            } else {
-                input.value = json[key];
-            }
-        }
-    });
-}
-
-
-
-
-
-
-/* -------------------------
-   Modal para importar URL
--------------------------- */
-function setupImportUrlModal() {
-    const modal = document.getElementById("importUrlModal");
-    const urlInput = document.getElementById("importUrlString");
-    const openImportModal = document.getElementById("openImportModal");
-    const confirmBtn = document.getElementById("confirmImportUrl");
-    const cancelBtn = document.getElementById("cancelImportUrl");
-
-    if (!modal || !openImportModal) return;
-
-    // ESC global → aciona cancelBtn
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !modal.classList.contains("hidden")) {
-            cancelBtn.click();
-        }
-    });
-
-    // ENTER nos inputs → aciona confirmBtn
-    [urlInput].forEach(input => {
-        input.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault(); // evita submit/form
-                confirmBtn.click();
-            }
-        });
-    });
-
-    openImportModal.onclick = (event) => {
-        event.preventDefault();
-        if (streamerBotConnected) {
-            urlInput.value = "";
-            modal.classList.remove("hidden");
-            urlInput.focus();
-        } else {
-            alert("Streamer.bot is Offline!");
-        }
-    };
-
-    cancelBtn.onclick = (e) => {
-        e.preventDefault();
-        modal.classList.add("hidden");
-    };
-
-    confirmBtn.onclick = (e) => {
-        e.preventDefault();
-        const url = urlInput.value.trim();
-
-        if (!url) {
-            alert("URL Field is required.");
-            return;
-        }
-        chatRdImportSettings(url);
-
-        modal.classList.add("hidden");
-
-        openImportModal.textContent = 'Settings imported! Reloading...';
-        openImportModal.style.backgroundColor = "#00dd63";
-
-        saveSettingsToLocalStorage();
-
-        setTimeout(() => {
-            window.location.reload();
-        }, 1000);
-    };
-}
-
-
-
-
-
-/* -------------------------
-   Configurar eventos para salvar mudanças
--------------------------- */
-function pushChangeEvents() {
-    const checkboxes = document.querySelectorAll("input[type=checkbox]:not(.avoid)");
-    const textfields = document.querySelectorAll("input[type=text]:not(.avoid)");
-    const numberfields = document.querySelectorAll("input[type=number]:not(.avoid)");
-    const colorfields = document.querySelectorAll("input[type=color]:not(.avoid)");
-    const selects = document.querySelectorAll("select:not(.avoid)");
-    const ranges = document.querySelectorAll("input[type=range]:not(.avoid)");
-
-    [...checkboxes, ...textfields, ...numberfields, ...colorfields, ...selects, ...ranges].forEach(el => {
-        el.addEventListener('change', saveSettingsToLocalStorage);
-        el.addEventListener('input', saveSettingsToLocalStorage);
-    });
-
-    document.querySelector('#font-slider').addEventListener('input', function () {
-        document.querySelector('#font-value').textContent = Math.floor(this.value * 100) + '%';
-    });
-
-    document.querySelector('#bg-opacity-slider').addEventListener('input', function () {
-        document.querySelector('#bg-opacity-value').textContent = Math.floor(this.value * 100) + '%';
-    });
-}
-
-/* -------------------------
-   Gerar URL de preview
--------------------------- */
-function generateUrl() {
-    const streamerBotServerAddress = document.querySelector('input[type=text][name=streamerBotServerAddress]').value;
-    const streamerBotServerPort = document.querySelector('input[type=text][name=streamerBotServerPort]').value;
-
-    const outputField = document.getElementById("outputUrl");
-    outputField.value = '';
-
-    const baseUrlObj = new URL(window.location.href);
-
-    // Garante que o pathname termine com "chat.html"
-    if (!baseUrlObj.pathname.endsWith("chat.html")) {
-        if (baseUrlObj.pathname.endsWith("/") || baseUrlObj.pathname === "") {
-            baseUrlObj.pathname += "chat.html";
-        } else if (baseUrlObj.pathname.endsWith("index.html")) {
-            baseUrlObj.pathname = baseUrlObj.pathname.replace(/index\.html$/, "chat.html");
-        } else {
-            baseUrlObj.pathname += "/chat.html";
-        }
-    }
-
-    const baseUrl = baseUrlObj.toString();
-
-    const checkboxes = document.querySelectorAll("input[type=checkbox]:not(.avoid)");
-    const textfields = document.querySelectorAll("input[type=text]:not(.avoid)");
-    const numberfields = document.querySelectorAll("input[type=number]:not(.avoid)");
-    const colorfields = document.querySelectorAll("input[type=color]:not(.avoid)");
-    const selects = document.querySelectorAll("select:not(.avoid)");
-    const ranges = document.querySelectorAll("input[type=range]:not(.avoid)");
-
-    const params = new URLSearchParams();
-
-    selects.forEach(s => params.set(s.name, s.value));
-    ranges.forEach(r => params.set(r.name, r.value));
-    checkboxes.forEach(cb => params.set(cb.name, cb.checked));
-    colorfields.forEach(cf => params.set(cf.name, cf.value));
-    textfields.forEach(tf => params.set(tf.name, tf.value));
-    numberfields.forEach(nf => params.set(nf.name, nf.value));
-
-    var finalChatRDURL = baseUrl + '?' + params.toString() + `&streamerBotServerAddress=${streamerBotServerAddress}&streamerBotServerPort=${streamerBotServerPort}`; 
-    outputField.value = finalChatRDURL
-    const iframe = document.querySelector('#preview iframe');
-    if (iframe) { iframe.src = finalChatRDURL; }
-}
-
-
-/* -------------------------
-   Copiar URL para clipboard
--------------------------- */
-function copyUrl() {
-    const output = document.getElementById("outputUrl");
-    const value = output.value;
-    const button = document.querySelector('.url-bar button');
-    const buttonDefaultText = 'Copy URL';
-
-    navigator.clipboard.writeText(value).then(() => {
-        button.textContent = 'ChatRD URL Copied!';
-        button.style.backgroundColor = "#00dd63";
-
-        setTimeout(() => {
-            button.textContent = buttonDefaultText;
-            button.removeAttribute('style');
-        }, 3000);
-    }).catch(err => {
-        console.error("Failed to copy: ", err);
-    });
-}
-
-/* -------------------------
-   Mostrar/esconder plataformas
--------------------------- */
-function setupPlatformToggles() {
-    const platforms = document.querySelectorAll('.platform');
-
-    platforms.forEach(platform => {
-        const platformId = platform.id;
-        const toggleName = `show${capitalize(platformId)}`;
-        const toggle = platform.querySelector(`input[name="${toggleName}"]`);
-        const setupDiv = platform.querySelector('.setup');
-
-        if (toggle && setupDiv) {
-            // Removido: initializeTransitionStyles(setupDiv);
-            
-            // Defina o overflow no CSS ou aqui, se preferir
-            setupDiv.style.overflow = 'hidden';
-            setupDiv.style.transition = 'max-height 0.4s ease, opacity 0.4s ease';
-
-            setVisible(setupDiv, toggle.checked);
-
-            toggle.removeEventListener('change', toggle._handler || (() => { }));
-
-            const handler = () => setVisible(setupDiv, toggle.checked);
-            toggle._handler = handler;
-            toggle.addEventListener('change', handler);
-        }
-    });
-
-    function setVisible(element, visible) {
-        if (visible) {
-            // Remove 'display: none' para que a altura possa ser calculada
-            element.style.display = 'block';
-
-            // Força o elemento a iniciar com altura e opacidade zero
-            element.style.maxHeight = '0px';
-            element.style.opacity = '0';
-            element.offsetHeight; // Força a renderização
-            
-            // Inicia a transição para a altura real e opacidade completa
-            element.style.maxHeight = element.scrollHeight + 'px';
-            element.style.opacity = '1';
-
-            // Remove os estilos após a transição de abertura
-            element.addEventListener('transitionend', function handler() {
-                element.style.maxHeight = null;
-                element.style.opacity = null;
-                element.removeEventListener('transitionend', handler);
-            });
-
+        if (hasSavedValue) {
+            value = settings[key];
         }
         
         else {
-            // Define o maxHeight para a altura atual antes de iniciar a transição de fechamento
-            element.style.maxHeight = element.scrollHeight + 'px';
-            element.offsetHeight; // Força a renderização
-            
-            // Inicia a transição para fechar o elemento
-            element.style.maxHeight = '0px';
-            element.style.opacity = '0';
+            const defaultValue = el.dataset.default;
 
-            // Esconde o elemento com 'display: none' após a transição
-            setTimeout(() => {
-                if (element.style.opacity === '0') {
-                    element.style.display = 'none';
+            if (defaultValue === undefined) {
+                value = undefined;
+            }
+            else if (el.tagName === 'WA-SWITCH' || (el.tagName === 'INPUT' && el.type === 'checkbox')) {
+                value = defaultValue === 'true'; // converte string pra boolean
+            }
+            else if (el.tagName === 'WA-SLIDER' || el.tagName === 'WA-NUMBER-INPUT') {
+                value = Number( defaultValue ); // converte string pra number
+            }
+            else {
+                value = defaultValue;
+            }
+        }
+
+        switch (el.tagName) {
+            case 'WA-SLIDER' :
+                el.value = value ?? '';
+                break;
+            case 'WA-SWITCH' :
+                el.checked = value;
+                break;
+            case 'INPUT' :
+                if (el.type === 'checkbox') {
+                    el.checked = value;
                 }
-            }, 400); // O tempo precisa ser o mesmo da transição (0.4s)
-        }
-    }
+                break;
 
-    // A função initializeTransitionStyles() foi removida.
-    // O estilo de transição foi movido para a função principal para ser definido uma única vez.
+            case 'WA-SELECT' :
+                el.value = el.multiple
+                    ? (Array.isArray(value) ? value : String(value ?? '').split(',').map(v => v.trim()).filter(Boolean))
+                    : (value ?? '');
+                break;
+
+            case 'WA-INPUT' :
+                el.value = value ?? '';
+                break;
+
+            case 'WA-NUMBER-INPUT' : 
+                el.value = value ?? '';
+                break;
+                
+            case 'WA-COLOR-PICKER' : 
+                el.value = value ?? '';
+                break;
+
+            default:
+                console.warn(`Tipo não tratado para "${key}":`, el.tagName);
+        }
+    });
+
+    console.debug('[ChatRD][Settings] Widget Settings Loaded on Local Storage onto the Settings.', settings);
     
-    function capitalize(str) {
-        return str.charAt(0).toUpperCase() + str.slice(1);
-    }
+    const url = await getChatRDUrl({ preview: true });
+    document.querySelector('#chatRDPreview').src = url;
+    
 }
 
-/* -------------------------
-   Navegação no footer
--------------------------- */
-function setupFooterNavBar() {
-    document.querySelectorAll('.nav-bar a').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            if (!targetId || !targetId.startsWith('#')) return;
 
-            const targetElement = document.querySelector(targetId);
-            if (targetElement) {
-                const offset = 20;
-                const y = targetElement.getBoundingClientRect().top + window.scrollY - offset;
-                window.scrollTo({ top: y, behavior: 'smooth' });
-            }
-        });
-    });
+
+async function collectChatRDSettings() {
+	const settings = {};
+
+	document.querySelectorAll('[data-setting]:not([data-ignore])').forEach((el) => {
+		const key = el.dataset.setting;
+		const defaultValue = el.dataset.default;
+
+		let value;
+
+		switch (el.tagName) {
+			case 'WA-SWITCH':
+				value = el.checked;
+				break;
+
+			case 'WA-SELECT':
+				value = el.multiple
+					? (Array.isArray(el.value) ? el.value.join(',') : [])
+					: el.value;
+				break;
+
+			case 'INPUT':
+				value = (el.type === 'checkbox') ? el.checked : el.value;
+				break;
+
+			case 'WA-SLIDER':
+            case 'WA-NUMBER-INPUT':
+                value = Number( el.value );
+                break;
+
+            case 'WA-INPUT':
+            case 'WA-COLOR-PICKER':
+                value = el.value;
+                break;
+
+			default:
+				console.warn(`Tipo não tratado para "${key}":`, el.tagName);
+				value = undefined;
+		}
+
+		// só pula se houver default declarado E o valor (normalizado pra string) for igual a ele
+		if (defaultValue !== undefined && String(value) === String(defaultValue)) {
+			return;
+		}
+
+		settings[key] = value;
+
+	});
+
+	return settings;
 }
 
-/* -------------------------
-   Modal para adicionar emotes
--------------------------- */
-function setupAddEmoteModal() {
-    const modal = document.getElementById("addEmoteModal");
-    const nameInput = document.getElementById("newEmoteName");
-    const urlInput = document.getElementById("newEmoteURL");
-    const confirmBtn = document.getElementById("confirmAddEmote");
-    const cancelBtn = document.getElementById("cancelAddEmote");
-    const addButton = document.querySelector("#addEmoteButton");
-    const textarea = document.querySelector("textarea[name=youTubeCustomEmotes]");
+async function bindChatRDSettings() {
 
-    if (!modal || !addButton || !textarea) return;
+    document.querySelectorAll('[data-setting]:not([data-ignore])').forEach((el) => {
+		if (el.dataset.bound) return;
+		el.dataset.bound = 'true';
+		el.addEventListener('input', async () => {
+            const settings = await collectChatRDSettings();
+            const url = await getChatRDUrl({ preview: true });
 
-    // ESC global → aciona cancelBtn
-    document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && !modal.classList.contains("hidden")) {
-            cancelBtn.click();
-        }
-    });
+            localStorage.setItem('chatrdWidgetSettings', JSON.stringify(settings));
+            console.debug('[ChatRD][Settings] Widget Settings Saved on Local Storage.', settings);
+            
+            document.querySelector('#chatRDPreview').src = url;
 
-    // ENTER nos inputs → aciona confirmBtn
-    [nameInput, urlInput].forEach(input => {
-        input.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                event.preventDefault(); // evita submit/form
-                confirmBtn.click();
-            }
+            streamerBotConnect();
+            speakerBotConnect();
         });
-    });
+	});
 
-    addButton.onclick = (event) => {
+    document.querySelector(`#playSoundButton`).addEventListener('click', async (event) => {
         event.preventDefault();
-        if (streamerBotConnected) {
-            nameInput.value = "";
-            urlInput.value = "";
-            modal.classList.remove("hidden");
-            nameInput.focus();
-        } else {
-            alert("Streamer.bot is Offline!");
-        }
-    };
 
-    cancelBtn.onclick = (e) => {
-        e.preventDefault();
-        modal.classList.add("hidden");
-    };
+        const soundFile = document.querySelector(`[data-setting="playSoundFile"]`).value;
+        const soundVolume = document.querySelector(`[data-setting="playSoundVolume"]`).value;
 
-    confirmBtn.onclick = (e) => {
-        e.preventDefault();
-        const name = nameInput.value.trim();
-        const url = urlInput.value.trim();
+        await chatrdPlaySound(soundFile, soundVolume);
+    });
 
-        if (!name || !url) {
-            alert("Both fields are required.");
-            return;
-        }
+    document.querySelector('#chatRDSelectSystemFont').addEventListener('change', (event) => {
+        const input = document.querySelector(`[data-setting="chatFontFamily"]`);
+        input.value = event.target.value;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+    });
 
-        let emotes;
-        try {
-            emotes = JSON.parse(JSON.parse(textarea.value));
-        }
-        catch (err) {
-            console.error("Invalid JSON", err);
-            alert("Emote data is invalid.");
-            return;
-        }
 
-        if (emotes[name]) {
-            alert(`Emote "${name}" already exists.`);
-            return;
-        }
+    const loadSystemFontsButton = document.querySelector('#chatRDLoadFontsFromSystem');
 
-        emotes[name] = url;
-        textarea.value = JSON.stringify(JSON.stringify(emotes));
-        saveYouTubeCustomEmotes();
-        modal.classList.add("hidden");
-        setTimeout(() => populateEmoteList(), 1000);
-    };
+    loadSystemFontsButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        populateFontSelect();
+    });
+
+    if ('queryLocalFonts' in window) {
+       loadSystemFontsButton.parentNode.style.display = '';
+    }
+
+}
+
+
+
+async function populateFontSelect() {
+    const select = document.querySelector('#chatRDSelectSystemFont');
+    const currentFontInput = document.querySelector('[data-setting="chatFontFamily"]');
+    const currentFont = currentFontInput.value;
+
+    select.parentNode.style.display = '';
+    currentFontInput.parentNode.style.display = 'none';
+
+    select.innerHTML = '';
+
+    if (currentFont) {
+        const currentOption = document.createElement('wa-option');
+        currentOption.value = currentFont;
+        currentOption.textContent = currentFont;
+        currentOption.style.fontFamily = currentFont;
+        currentOption.style.fontSize = '20px';
+        currentOption.selected = true;
+        select.appendChild(currentOption);
+    }
+
+    try {
+        const fonts = await window.queryLocalFonts();
+        const uniqueNames = [...new Set(fonts.map(f => f.family))].sort();
+
+        uniqueNames.forEach(name => {
+            if (name === currentFont) return;
+
+            const option = document.createElement('wa-option');
+            option.value = name;
+            option.textContent = name;
+            option.style.fontFamily = name;
+            option.style.fontSize = '20px';
+            select.appendChild(option);
+        });
+    }
+    catch (err) {
+        console.error('[ChatRD][Settings] Permission denied or API unavailable:', err);
+    }
 }
 
 
 
 
 
+async function importChatRDSettings(url) {
 
-/* -------------------------
-   Lista de emotes
--------------------------- */
-function populateEmoteList() {
-    const textarea = document.querySelector("textarea[name=youTubeCustomEmotes]");
-    const emoteList = document.querySelector("#youtube .emote-list");
-    if (!textarea || !emoteList) return;
+    console.debug('[ChatRD][Settings] Importing Settings...');
 
-    emoteList.querySelectorAll(".emote-item").forEach(item => {
-        if (item.querySelector("button")?.id !== "addEmoteButton") {
-            item.remove();
+    const base = new URL(url);
+    base.hash = "";
+
+    const settings = Object.fromEntries( base.searchParams.entries() );
+    const validated = {};
+
+    document.querySelectorAll('[data-setting]:not([data-ignore])').forEach((el) => {
+        const key = el.dataset.setting;
+
+        if ( !Object.prototype.hasOwnProperty.call( settings, key ) ) {
+            return;
         }
+
+        const rawValue = settings[ key ];
+        const defaultValue = el.dataset.default;
+
+        let value;
+
+        switch (el.tagName) {
+            case 'WA-SWITCH':
+                value = rawValue === 'true';
+                break;
+
+            case 'WA-SELECT':
+                value = el.multiple
+                    ? rawValue.split(',').map(v => v.trim()).filter(Boolean)
+                    : rawValue;
+                break;
+
+            case 'INPUT':
+                value = (el.type === 'checkbox') ? (rawValue === 'true') : rawValue;
+                break;
+
+            case 'WA-SLIDER':
+            case 'WA-NUMBER-INPUT':
+                value = Number( rawValue );
+                break;
+
+            case 'WA-INPUT':
+            case 'WA-COLOR-PICKER':
+                value = rawValue;
+                break;
+
+            default:
+                console.warn(`Tipo não tratado para "${key}":`, el.tagName);
+                value = undefined;
+        }
+
+        if ( value === undefined ) {
+            return;
+        }
+
+        if ( defaultValue !== undefined && String(value) === String(defaultValue) ) {
+            return;
+        }
+
+        validated[ key ] = value;
     });
 
-    let emotes;
+    localStorage.setItem( "chatrdWidgetSettings", JSON.stringify( validated ) );
+
+    console.debug('[ChatRD][Settings] Settings Imported Successfully!', validated);
+    console.debug('[ChatRD][Settings] Reloading...');
+
+    var loadingScreen = document.getElementById('loading');
+    
+    loadingScreen.style.display = '';
+    loadingScreen.classList.remove('hidden');
+    document.body.style.overflowY = 'hidden';
+
+    setTimeout(() => {
+        location.reload();
+    }, 1500)
+
+    //loadChatRDSettings();
+}
+
+async function getChatRDUrl({ preview = false } = {}) {
+	const base = new URL(window.location.href);
+
+	base.hash = "";
+
+	const targetFile = preview ? "preview.html" : "chat.html";
+
+	if (!base.pathname.endsWith("chat.html") && !base.pathname.endsWith("preview.html")) {
+		if (base.pathname.endsWith("/") || base.pathname === "") {
+			base.pathname += targetFile;
+		}
+		else if (base.pathname.endsWith("index.html")) {
+			base.pathname = base.pathname.replace(/index\.html$/, targetFile);
+		}
+		else {
+			base.pathname += "/" + targetFile;
+		}
+	}
+	else {
+		base.pathname = base.pathname.replace(/(chat|preview)\.html$/, targetFile);
+	}
+
+	const settings = await collectChatRDSettings();
+
+	Object.entries(settings).forEach(([key, value]) => {
+		base.searchParams.set(key, value);
+	});
+
+	return base.toString();
+}
+
+
+
+
+
+/* YouTube Member Emotes Functions */
+async function loadYoutubeMemberEmotes() {
+    const youtubeCustomEmoteArea = document.querySelector('#youTubeCustomEmotes');
+
+    let youtubeCustomEmotes;
+
     try {
-        emotes = JSON.parse(JSON.parse(textarea.value));
-    } catch (e) {
-        console.error("[ChatRD][Settings] Invalid JSON in YouTube Emotes textarea", e);
-        return;
+        youtubeCustomEmotes = await streamerBot.client.getGlobal('chatrdytcustomemotes', true);
+    }
+    catch (err) {
+        console.warn('[ChatRD][Settings][YouTube] Member Emotes variable not found. Creating it...');
+        
+        await streamerBot.client.doAction({
+            name: "[YouTube] Member Emotes" },
+            {
+                "chatrdytcustomemotes": "\"{}\"",
+            }
+        ).then((res) => {
+            console.debug('[ChatRD][Settings] YouTube Member Emotes variable was created.');
+            youtubeCustomEmotes = { variable: { value: "\"{}\"" } };
+        });
     }
 
-    const addButtonSpan = emoteList.querySelector("#addEmoteButton")?.parentElement;
+    console.debug('[ChatRD][Settings][YouTube] Member Emotes are being loaded...');
+
+    const youtubeEmotesJson = JSON.parse(youtubeCustomEmotes.variable.value);
+    youtubeEmotes = JSON.parse(youtubeEmotesJson);
+    
+    await populateYoutubeMemberEmotes( youtubeEmotes );
+
+    console.debug('[ChatRD][Settings][YouTube] Member Emotes loaded:', youtubeEmotes);   
+}
+
+async function populateYoutubeMemberEmotes(emotes) {
+
+    const list = document.querySelector("#youtube-member-emote-list");
+    const addButton = list.querySelector("#addEmoteButton")?.parentElement;
+
+    if (!list) return;
+    
+    list.querySelectorAll(".emote-item:not(.add)").forEach(item => {
+        item.remove();
+    });
 
     for (const [emoteName, emoteUrl] of Object.entries(emotes)) {
-        const span = document.createElement("span");
-        span.classList.add("emote-item");
-        span.innerHTML = `
-            <img data-emote="${emoteName}" src="${emoteUrl}" alt="">
-            <em>${emoteName}</em>
-            <button class="delete"><i class="fa-solid fa-trash-can"></i></button>
-        `;
+        
+        const emote = document.createElement("div");
+        emote.classList.add('emote-item');
 
-        span.querySelector(".delete").addEventListener("click", (event) => {
-            event.preventDefault();
-            if (confirm(`Are you sure you want to delete '${emoteName}'?`)) {
-                delete emotes[emoteName];
-                textarea.value = JSON.stringify(JSON.stringify(emotes));
-                saveYouTubeCustomEmotes();
-                setTimeout(() => populateEmoteList(), 1000);
-            }
+        const img = document.createElement("img");
+        img.src = emoteUrl;
+
+        const em = document.createElement("em");
+        em.textContent = emoteName;
+
+        const editBtn = document.createElement("button");
+        editBtn.classList.add("edit");
+        editBtn.dataset.emoteName = emoteName;
+        editBtn.dataset.emoteUrl = emoteUrl;
+        const editIcon = document.createElement("i");
+        editIcon.classList.add("ri-edit-box-line");
+        editBtn.appendChild(editIcon);
+
+        editBtn.addEventListener('click', () => {
+            const emoteName = editBtn.dataset.emoteName;
+            const emoteUrl = editBtn.dataset.emoteUrl;
+
+            const modal = document.querySelector('#modalYoutubeAddEmote');
+            
+            const nameInput = modal.querySelector('#newEmoteName');
+            const urlInput = modal.querySelector('#newEmoteURL');
+            const legacyInput = modal.querySelector('#emoteIdLegacy'); // NOVO
+
+            nameInput.value = emoteName;
+            urlInput.value = emoteUrl;
+            legacyInput.value = emoteName; // NOVO: guarda o nome ORIGINAL
+
+            modal.open = true;
         });
 
-        emoteList.insertBefore(span, addButtonSpan || null);
+        const deleteBtn = document.createElement("button");
+        deleteBtn.classList.add("delete");
+        deleteBtn.dataset.emoteName = emoteName;
+        deleteBtn.dataset.emoteUrl = emoteUrl;
+        const deleteIcon = document.createElement("i");
+        deleteIcon.classList.add("ri-delete-bin-line");
+        deleteBtn.appendChild(deleteIcon);
+
+        deleteBtn.addEventListener('click', () => {
+            const emoteName = deleteBtn.dataset.emoteName;
+            const emoteUrl = deleteBtn.dataset.emoteUrl;
+
+            const modal = document.querySelector('#modalYesNo');
+            const modalContent = modal.querySelector('#youtubeEmoteDeletion');
+            modalContent.innerHTML = '';
+
+            const emoteToDelete = document.createElement("img");
+            emoteToDelete.dataset.emoteId = emoteName;
+            emoteToDelete.src = emoteUrl;
+
+            const emoteToDeleteTitle = document.createElement("strong");
+            emoteToDeleteTitle.textContent = emoteName;
+            
+            modalContent.append(emoteToDelete, emoteToDeleteTitle);
+
+            modal.open = true;
+        });
+
+        emote.append(img, em, editBtn, deleteBtn);
+
+        list.insertBefore(emote, addButton || null);
+
     }
+
+
 }
 
-/* -------------------------
-   Funções YouTube <-> Streamer.bot
--------------------------- */
-function youtubeSaveMemberEmotes(data) {
-    if (!streamerBotClient) return;
-    const json = JSON.stringify(data);
-    streamerBotClient.doAction({ name: "[YouTube] Member Emotes" }, {
-        "chatrdytcustomemotes": json,
-    }).then((res) => {
+async function addYoutubeEmoteToChatRD(name, url) {
+    const updatedEmotes = await updateYoutubeEmoteKey(youtubeEmotes, name, "", url);
+    const updatedEmotesJson = JSON.stringify( JSON.stringify(updatedEmotes) );
+    youtubeEmotes = updatedEmotes;
+    
+    console.debug('[ChatRD][Settings] Updating the YouTube Member Emotes...', youtubeEmotes);
+
+    streamerBot.client.doAction({
+        name: "[YouTube] Member Emotes"
+    },{ "chatrdytcustomemotes": updatedEmotesJson, })
+    .then((res) => {
+        console.debug('[ChatRD][Settings] Saving YouTube Member Emotes... ', res);
+    });
+    console.debug('[ChatRD][Settings] YouTube Member Emotes updated:', youtubeEmotes);
+}
+
+async function deleteYoutubeEmoteFromChatRD(name) {
+    delete youtubeEmotes[name];
+
+    const updatedEmotesJson = JSON.stringify( JSON.stringify(youtubeEmotes) );
+
+    console.debug('[ChatRD][Settings] Deleting YouTube Member Emote...', name, youtubeEmotes);
+
+    streamerBot.client.doAction({
+        name: "[YouTube] Member Emotes"
+    },{ "chatrdytcustomemotes": updatedEmotesJson, })
+    .then((res) => {
         console.debug('[ChatRD][Settings] Saving YouTube Member Emotes... ', res);
     });
 }
 
-function youtubeLoadMemberEmotes() {
-    if (!streamerBotClient) return Promise.resolve(null);
-    return streamerBotClient.getGlobals().then((globals) => {
-        console.debug('[ChatRD][Settings] Loading Global Vars...', globals);
-        const emoteglobal = globals.variables?.chatrdytcustomemotes;
-        if (!emoteglobal) {
-            console.warn('[ChatRD][Settings] Global variable "chatrdytcustomemotes" not found.');
-            return null;
-        }
-        try {
-            return JSON.parse(emoteglobal.value);
-        } catch (e) {
-            console.error('[ChatRD][Settings] Failed to parse YouTube Member Emote JSON', e);
-            return null;
-        }
+async function updateYoutubeEmoteToChatRD(originalName, newName, url) {
+    const updatedEmotes = await updateYoutubeEmoteKey(youtubeEmotes, originalName, newName, url);
+    const updatedEmotesJson = JSON.stringify( JSON.stringify(updatedEmotes) );
+    youtubeEmotes = updatedEmotes;
+
+    console.debug('[ChatRD][Settings] Updating the YouTube Member Emotes...', youtubeEmotes);
+
+    streamerBot.client.doAction({
+        name: "[YouTube] Member Emotes"
+    },{ "chatrdytcustomemotes": updatedEmotesJson, })
+    .then((res) => {
+        console.debug('[ChatRD][Settings] Saving YouTube Member Emotes... ', res);
     });
+    console.debug('[ChatRD][Settings] YouTube Member Emotes updated:', youtubeEmotes);
 }
 
-/* -------------------------
-   Conexão com Streamer.bot
--------------------------- */
-function streamerBotConnect() {
-    const streamerBotStatus = document.getElementById('streamerBotStatus');
+function updateYoutubeEmoteKey( emotes, oldKey, newKey, newValue ) {
+	var keyExists = oldKey in emotes;
+	var finalKey = oldKey;
 
-    const streamerBotServerAddress = document.querySelector('input[type=text][name=streamerBotServerAddress]').value;
-    const streamerBotServerPort = document.querySelector('input[type=text][name=streamerBotServerPort]').value;
+	if ( newKey && typeof newKey === "string" && newKey.trim() ) {
+		finalKey = newKey;
+	}
 
-    // 🔎 Se já existe um cliente, encerra a tentativa anterior
-    if (streamerBotClient) {
-        try {
-            console.debug("[ChatRD][Settings] Closing previous Streamer.bot connection...");
-            streamerBotClient.disconnect?.(); // usa se existir
-            streamerBotClient = null;
-        } catch (err) {
-            console.error("[ChatRD][Settings] Error closing previous client:", err);
-        }
+	var finalValue = newValue !== undefined ? newValue : ( keyExists ? emotes[ oldKey ] : undefined );
+
+	emotes[ finalKey ] = finalValue;
+
+	if ( keyExists && finalKey !== oldKey ) {
+		delete emotes[ oldKey ]; // renomeou, então some com a chave antiga
+	}
+
+	return emotes;
+}
+
+
+
+
+
+
+
+
+
+
+/* Streamer.bot & Speaker.bot Functions */
+
+async function streamerBotDisconnectExisting(closeCode = 1000, timeout = 1000) {
+    if (!streamerBot.client) {
+        console.warn(`[ChatRD][Settings] No Streamer.bot client detected.`);
+        return false;
     }
 
-    streamerBotClient = new StreamerbotClient({
-        host: streamerBotServerAddress,
-        port: streamerBotServerPort,
+    try {
+        await streamerBot.client.disconnect(closeCode, timeout);
+        console.debug(`[ChatRD][Settings] Streamer.bot disconnected successfully.`);
+        return true;
+    }
+    catch (err) {
+        console.error(`[ChatRD][Settings] Error while trying to disconnect from Streamer.bot:`, err);
+        return false;
+    }
+}
+
+async function streamerBotConnect() {
+
+    await streamerBotDisconnectExisting();
+
+    const status = document.querySelector('#streamerbot .status');
+    const streamerBotIp = document.querySelector(`[data-setting=streamerBotServerAddress]`).value;
+    const streamerBotPort = document.querySelector(`[data-setting=streamerBotServerPort]`).value;
+    const streamerBotWSS = document.querySelector(`[data-setting=streamerBotWSS]`).checked;
+
+    const streamerBotSchema = streamerBotWSS ? 'wss' : 'ws';
+
+    streamerBot.client = new StreamerbotClient({
+        host: streamerBotIp,
+        port: streamerBotPort,
+        scheme: streamerBotSchema,
+        autoReconnect: true,
         onConnect: () => {
+            streamerBot.connected = true;
             console.debug(`[ChatRD][Settings] Connected to Streamer.bot successfully!`);
-            streamerBotConnected = true;
+            status.classList.add('connected');
 
-            streamerBotStatus.classList.add('connected');
-            streamerBotStatus.querySelector('small').textContent = `Connected`;
-
-            loadSettingsFromLocalStorage();
-            pushChangeEvents();
-            generateUrl();
-            setupFooterNavBar();
-            setupAddEmoteModal();
-            setupImportUrlModal();
-            setupPlatformToggles();
-            speakerBotConnection();
-            loadYouTubeCustomEmotes();
+            loadYoutubeMemberEmotes();
+            renderActionsStatus();
         },
         onDisconnect: () => {
-            streamerBotStatus.classList.remove('connected');
-            streamerBotStatus.querySelector('small').textContent = `Awaiting for connection`;
-            streamerBotConnected = false;
+            streamerBot.connected = false;
+            status.classList.remove('connected');
             console.debug(`[ChatRD][Settings] Streamer.bot Disconnected!`);
         }
     });
+
 }
 
+async function speakerBotConnect() {
+    
+    const status = document.querySelector('#speakerbot .status');
+    const speakerBotIp = document.querySelector(`[data-setting=speakerBotServerAddress]`).value;
+    const speakerBotPort = document.querySelector(`[data-setting=speakerBotServerPort]`).value;
+    const speakerBotVoiceAlias = document.querySelector(`[data-setting=speakerBotVoiceAlias]`).value;
 
-async function speakerBotConnection() {
-    const speakerBotStatus = document.getElementById('speakerBotStatus');
+    const showSpeakerbot = document.querySelector(`[data-setting=showSpeakerbot]`).checked;
 
-    const speakerBotServerAddress = document.querySelector('input[type=text][name=speakerBotServerAddress]').value;
-    const speakerBotServerPort = document.querySelector('input[type=text][name=speakerBotServerPort]').value;
-    const speakerBotVoiceAlias = document.querySelector('input[type=text][name=speakerBotVoiceAlias]').value;
-
-    const showSpeakerbot = document.querySelector('input[type=checkbox][name=showSpeakerbot]').checked;
+    if (!showSpeakerbot) return;
 
     if (!showSpeakerbot) {
-        // Se não é pra mostrar, desconecta caso esteja ativo
-        if (speakerBotClient && speakerBotClient.ws && speakerBotClient.ws.readyState !== WebSocket.CLOSED) {
-            console.log("[ChatRD][Settings] Disconnecting SpeakerBot...");
-            speakerBotClient.disconnect();
+        if (speakerBot.client && speakerBot.client.ws && speakerBot.client.ws.readyState !== WebSocket.CLOSED) {
+            console.debug("[ChatRD][Settings] Disconnecting SpeakerBot...");
+            speakerBot.client.disconnect();
         }
         return;
     }
 
-    // Se já está conectado ou conectando, não cria outro
-    if (speakerBotClient && speakerBotClient.ws && speakerBotClient.ws.readyState !== WebSocket.CLOSED) {
-        console.log("[ChatRD][Settings] SpeakerBot WebSocket is already on!.");
+    if (speakerBot.client && speakerBot.client.ws && speakerBot.client.ws.readyState !== WebSocket.CLOSED) {
+        console.debug("[ChatRD][Settings] SpeakerBot WebSocket is already on!.");
         return;
     }
 
-    // Cria nova instância
-    speakerBotClient = new SpeakerBotClient({
-        host: speakerBotServerAddress,
-        port: speakerBotServerPort,
+    speakerBot.client = new SpeakerBotClient({
+        host: speakerBotIp,
+        port: speakerBotPort,
         voiceAlias: speakerBotVoiceAlias,
 
         onConnect: () => {
-            speakerBotStatus.classList.add('connected');
-            speakerBotStatus.querySelector('small').textContent = `Connected`;
+            status.classList.add('connected');
         },
 
         onDisconnect: () => {
-            speakerBotStatus.classList.remove('connected');
-            speakerBotStatus.querySelector('small').textContent = `Awaiting for connection`;
+            status.classList.remove('connected');
         }
     });
 }
 
+function renderActionRow(actionName, isFound) {
+    const statusClass = isFound ? 'found' : 'not-found';
+    const icon = isFound
+        ? '<i class="ri-checkbox-circle-fill"></i>'
+        : '<i class="ri-close-circle-fill"></i>';
+ 
+    return `<div class="sbAction">${actionName} <span class="${statusClass}">${icon}</span></div>`;
+}
 
-/* -------------------------
-   Inicialização
--------------------------- */
-document.addEventListener('DOMContentLoaded', () => {
-    loadStreamerBotSettings();
-    setTimeout(() => { streamerBotConnect(); }, 1000);
+async function renderActionsStatus() {
+    const container = document.getElementById('sbActionList');
+ 
+    const response = await streamerBot.client.getActions();
+    const existingNames = response.actions.map((action) => action.name);
+ 
+    const missingActions = sbRequiredActions.filter(
+        (name) => !existingNames.includes(name)
+    );
+ 
+    container.innerHTML = sbRequiredActions
+        .map((name) => renderActionRow(name, existingNames.includes(name)))
+        .join('\n');
 
-    const streamerBotServerAddressSwitch = document.querySelector('input[type=text][name=streamerBotServerAddress]');
-    const streamerBotServerPortSwitch = document.querySelector('input[type=text][name=streamerBotServerPort]');
+    if (missingActions.length > 0) {
+        document.getElementById('modalStreamerBotActions').setAttribute('open', 'true');
+    }
+}
 
-    streamerBotServerAddressSwitch.addEventListener('input', () => {
-        saveStreamerBotSettings();
-        streamerBotConnect();
-        generateUrl();
+function copySbActions() {
+    const sbCodesbActionCode = document.getElementById("sbActionCode");
+    const sbCodeFull = sbCodesbActionCode.textContent.trim();
+    const button = document.querySelector('#sbActionsCopy');
+    navigator.clipboard.writeText(sbCodeFull).then(() => {
+        button.textContent = '👍';
+        button.style.backgroundColor = "#00dd63";
+
+        setTimeout(() => {
+            button.innerHTML = '<i class="ri-file-copy-line"></i>';
+            button.removeAttribute('style');
+        }, 3000);
+    }).catch(err => {
+        console.error("[ChatRD][Settings] Failed to copy: ", err);
     });
-    streamerBotServerPortSwitch.addEventListener('input', () => {
-        saveStreamerBotSettings();
-        streamerBotConnect();
-        generateUrl();
+}
+
+
+
+
+
+
+
+
+
+
+/* Web Asweome Visual Styling */
+
+async function bindButtonGroup(handlers, options = {}) {
+	const { preventDefault = true } = options;
+
+	const ids = Object.keys(handlers);
+	const buttons = ids.reduce((acc, id) => {
+		const btn = document.getElementById(id);
+		if (!btn) {
+			return acc;
+		}
+		acc[id] = btn;
+		return acc;
+	}, {});
+
+	for (const [id, handler] of Object.entries(handlers)) {
+		const button = buttons[id];
+		if (!button) continue;
+
+		button.addEventListener('click', (event) => {
+			if (preventDefault) event.preventDefault();
+			handler(event);
+		});
+	}
+
+	return buttons
+}
+
+async function toggleButtonGroup(buttons, activeId) {
+	for (const [id, btn] of Object.entries(buttons)) {
+		btn.classList.toggle('enabled', id === activeId);
+	}
+}
+
+async function registerRemixIcons() {
+    registerIconLibrary('remixicon', {
+        resolver: name => {
+            const match = name.match(/^(.*?)\/(.*?)?$/);
+            match[1] = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+            return `https://cdn.jsdelivr.net/npm/remixicon@4.9.1/icons/${match[1]}/${match[2]}.svg`;
+        },
+        mutator: svg => svg.setAttribute('fill', 'currentColor'),
+    });
+}
+
+async function setUpDetails() {
+
+	// Percentage Sliders
+	const percentageSliders = document.querySelectorAll('.slider_percent');
+	const percentageFormatter = new Intl.NumberFormat('en-US', { style: 'percent' });
+
+	customElements.whenDefined('wa-slider').then(() => {
+		percentageSliders.forEach((slider) => {
+			slider.valueFormatter = value => percentageFormatter.format(value);
+		});
+	});
+
+	const oneLineCheckbox = document.querySelector('[data-setting=chatOneLine]');
+	const horizontalCheckbox = document.querySelector('[data-setting=chatHorizontal]');
+
+	// Settings - Layouts
+	const layoutButtons = await bindButtonGroup({
+		'vertical-chat' : () => selectChatLayout('vertical-chat'),
+		'one-line-chat' : () => selectChatLayout('one-line-chat'),
+		'horizontal-chat' : () => selectChatLayout('horizontal-chat'),
+	});
+
+	function setCheckboxValue(checkbox, value) {
+		if (checkbox.checked === value) return;
+		checkbox.checked = value;
+		checkbox.dispatchEvent(new Event('input', { bubbles: true }));
+	}
+
+	function selectChatLayout(layoutId) {
+		toggleButtonGroup(layoutButtons, layoutId);
+
+		setCheckboxValue(oneLineCheckbox, layoutId === 'one-line-chat');
+		setCheckboxValue(horizontalCheckbox, layoutId === 'horizontal-chat');
+	}
+
+	function getCurrentLayoutId() {
+		if (oneLineCheckbox.checked) return 'one-line-chat';
+		if (horizontalCheckbox.checked) return 'horizontal-chat';
+		return 'vertical-chat';
+	}
+
+	toggleButtonGroup(layoutButtons, getCurrentLayoutId());
+
+    
+    
+    // Setting up Buttons
+    const copyButton = document.getElementById("copyUrlButton");
+    copyButton.addEventListener("click", async () => {
+
+        const defaultText = copyButton.textContent;
+        const url = await getChatRDUrl();
+        
+        navigator.clipboard.writeText(url).then(() => {
+            copyButton.textContent = '👍';
+            copyButton.style.backgroundColor = "#00dd63";
+
+            console.debug("[ChatRD][Settings] ChatRD's URL copied successfully!");
+
+            setTimeout(() => {
+                copyButton.textContent = defaultText;
+                copyButton.removeAttribute('style');
+            }, 3000);
+        })
+        .catch(err => {
+            console.error("[ChatRD][Settings] Failed to copy ChatRD's URL: ", err);
+        });
+    });
+    
+
+    const importUrlButton = document.getElementById("openImportModal");
+    importUrlButton.addEventListener("click", async () => {
+        const dialog = document.querySelector('#modalUrlImport');
+        dialog.open = true;
     });
 
-    const speakerBotSwitcher = document.querySelector('input[type=checkbox][name=showSpeakerbot]');
-    speakerBotSwitcher.addEventListener('change', () => {
-        speakerBotConnection();
+    
+
+
+    document.querySelector("#addEmoteButton").addEventListener( "click", function() {
+        const dialog = document.querySelector('#modalYoutubeAddEmote');
+        dialog.open = true;
     });
+
+
+
+    // Setting up Modals
+    document.querySelectorAll('.modal').forEach(modal => {
+        
+        modal.querySelector('.cancel')?.addEventListener('click', () => {
+            modal.open = false;
+        });
+
+        modal.addEventListener('wa-after-hide', function() {
+            modal.querySelectorAll('wa-input').forEach(input => input.value = '');
+            document.querySelector('#emoteIdLegacy').value = '';
+        });
+
+
+
+        modal.querySelector('#youtubeEmoteDeleteButton')?.addEventListener('click', async () => {
+            const emoteId = modal.querySelector('#youtubeEmoteDeletion img').dataset.emoteId;
+            await deleteYoutubeEmoteFromChatRD( emoteId );
+            await populateYoutubeMemberEmotes( youtubeEmotes );
+            modal.open = false;
+        });
+
+
+
+        modal.querySelector('#importUrlConfirm')?.addEventListener('click', async () => {
+            const url = modal.querySelector('#importUrl');
+            await importChatRDSettings(url.value.trim());
+            modal.open = false;
+        });
+
+
+
+        modal.querySelector('#reloadStreamerBotActions')?.addEventListener('click', async () => {
+            location.reload();
+        });
+
+
+
+        modal.querySelector('#addEmoteConfirm')?.addEventListener('click', async () => {
+            const nameInput = modal.querySelector('#newEmoteName');
+            const urlInput = modal.querySelector('#newEmoteURL');
+            const legacyInput = modal.querySelector('#emoteIdLegacy'); // NOVO
+
+            const name = ( nameInput.value || "" ).trim();
+	        const url = ( urlInput.value || "" ).trim();
+            const originalName = ( legacyInput.value || "" ).trim(); // NOVO
+
+            if (!name || !url) {
+                const dialog = document.querySelector('#modalInfo');
+                
+                dialog.querySelectorAll('.info').forEach(info => info.style.display = 'none');
+                dialog.querySelectorAll('.button').forEach(button => button.style.display = 'none');
+
+                dialog.querySelector('#youtubeEmoteBothFields').style.display = '';
+                dialog.querySelector('#youtubeEmoteOkButton').style.display = '';
+                dialog.open = true;
+                return;
+            }
+
+            if ( originalName ) {
+                console.debug(`[ChatRD][Settings] Updating emote "${originalName}" -> "${name}" (${url})...`);
+                await updateYoutubeEmoteToChatRD(originalName, name, url);
+            }
+            else {
+                console.debug(`[ChatRD][Settings] Adding emote "${name}" (${url})...`);
+                await addYoutubeEmoteToChatRD(name, url);
+            }
+
+            await populateYoutubeMemberEmotes( youtubeEmotes );
+
+            legacyInput.value = "";
+            modal.open = false;
+        });
+
+
+    });
+
+    document.querySelector('#sbActionsCopy').addEventListener('click', function() {
+        copySbActions();
+    });
+
+
+}
+
+
+
+
+
+
+
+
+async function hideLoadingScreen() {
+	var loadingScreen = document.getElementById('loading');
+	if (!loadingScreen) {
+		return;
+	}
+
+	loadingScreen.addEventListener('transitionend', function onTransitionEnd() {
+		loadingScreen.style.display = 'none';
+        document.body.style.overflowY = 'unset';
+		loadingScreen.removeEventListener('transitionend', onTransitionEnd);
+	});
+
+	loadingScreen.classList.add('hidden');
+}
+
+async function isChannelLive(username) {
+    const response = await fetch("https://gql.twitch.tv/gql", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Client-Id": "kimne78kx3ncx6brgo4mv6wki5h1ko"
+        },
+        body: JSON.stringify({
+            query: `
+                query($login: String!) {
+                    user(login: $login) {
+                        stream {
+                            id
+                            type
+                        }
+                    }
+                }
+            `,
+            variables: { login: username }
+        })
+    });
+
+    const data = await response.json();
+    return data.data.user?.stream !== null;
+}
+
+
+let isVortisLive;
+
+async function checkIfVortisIsLiveBecauseIWantMoreFollowersLMAO() {
+    const isLive = await isChannelLive("vortisrd");
+
+    if ( isLive ) {
+        if (isVortisLive == true) return;
+        document.querySelector('footer .links').style.display = 'none';
+        document.querySelector('footer .live').style.display = '';
+        isVortisLive = true;
+    }
+    else {
+        if (isVortisLive == false) return;
+        document.querySelector('footer .links').style.display = '';
+        document.querySelector('footer .live').style.display = 'none';
+        isVortisLive = false;
+    }
+}
+
+
+
+async function loadWithProgress(onProgress) {
+    const tags = new Set(
+      [...document.querySelectorAll('*')]
+        .map(el => el.tagName.toLowerCase())
+        .filter(tag => tag.startsWith('wa-'))
+    );
+
+    const total = tags.size;
+    let loaded = 0;
+
+    await Promise.all(
+        [...tags].map(async (tag) => {
+            await customElements.whenDefined(tag);
+            loaded++;
+            onProgress(Math.round((loaded / total) * 100));
+        })
+    );
+}
+
+await loadWithProgress(async (pct) => {
+
+    document.querySelector('#loadingPercentage span').textContent = `${pct}%`;
+
+    if (pct == 100) {
+        registerRemixIcons();
+        await loadChatRDSettings();
+        await bindChatRDSettings();
+
+        await hideLoadingScreen(); 
+        document.querySelector('#loadingPercentage span').textContent = ``;
+        
+        await setUpDetails();
+        await streamerBotConnect();
+        await checkIfVortisIsLiveBecauseIWantMoreFollowersLMAO();
+        setInterval(async () => {
+            await checkIfVortisIsLiveBecauseIWantMoreFollowersLMAO();
+        }, 30000);
+    }
 });

@@ -492,7 +492,7 @@ function addFirstChatter() {
     const p = r(P), u = r(U), m = r(M), id = 'm' + (n++);
     const cls = ['first-chatter'];
     const el = insert(`
-        <div id="${id}" data-user="${u}" class="item chat ${p} ${cls.join(' ')}">
+        <div id="${id}" data-user="${u}" class="item msg ${p} ${cls.join(' ')}">
             <div class="message">
                 <div class="first-message">&#10024; First-time Chatter</div>
                 <div class="info">
@@ -574,7 +574,7 @@ function addEvent(kind) {
         }
         case 'announce':
             html = `
-                <div id="${id}" data-user="${u}" class="item chat twitch announcement blue">
+                <div id="${id}" data-user="${u}" class="item msg twitch announcement blue">
                     <div class="message">
                         <div class="info">
                             <span class="timestamp"></span>

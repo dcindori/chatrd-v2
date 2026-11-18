@@ -4,15 +4,19 @@
 
 let speakerBotClient = null;
 
+const streamerBotStatus = {};
 const streamerBotServerAddress      = getURLParam("streamerBotServerAddress", "127.0.0.1");
 const streamerBotServerPort         = getURLParam("streamerBotServerPort", "8080");
-const showSpeakerbot                = getURLParam("showSpeakerbot", true);
+const streamerBotWSS                = getURLParam("streamerBotWSS", false);
+const showSpeakerbot                = getURLParam("showSpeakerbot", false);
 const speakerBotServerAddress       = getURLParam("speakerBotServerAddress", "127.0.0.1");
 const speakerBotServerPort          = getURLParam("speakerBotServerPort", "7580");
 const speakerBotChatRead            = getURLParam("speakerBotChatRead", false);
 const speakerBotEventRead           = getURLParam("speakerBotEventRead", false);
 const speakerBotVoiceAlias          = getURLParam("speakerBotVoiceAlias", "Maria");
 const speakerBotChatTemplate        = getURLParam("speakerBotChatTemplate", "{user} said {message}");
+
+const streamerInfo = {};
 
 function getSpeakerBotInstance() {
     if (!speakerBotClient && showSpeakerbot) {
@@ -22,7 +26,7 @@ function getSpeakerBotInstance() {
             voiceAlias: speakerBotVoiceAlias,
             onConnect: () => {
                 notifySuccess({
-                    title: 'Connected to Speaker.bot',
+                    title: 'ChatRD 🤝 Speaker.bot',
                     text: ''
                 });
             },
@@ -31,16 +35,18 @@ function getSpeakerBotInstance() {
     return speakerBotClient;
 }
 
-
 let streamerBotClientActive = null;
 
 function streamerBotConnect() {
-    // 🔎 Se já existe um cliente, encerra a tentativa anterior
+
+    const streamerBotSchema = streamerBotWSS ? 'wss' : 'ws';
+    
     if (streamerBotClientActive) {
         try {
             console.debug("[ChatRD][Settings] Closing previous Streamer.bot connection...");
-            streamerBotClientActive.disconnect?.(); // usa se existir na lib
+            streamerBotClientActive.disconnect?.();
             streamerBotClientActive = null;
+            streamerBotStatus.connected = false;
         } catch (err) {
             console.error("[ChatRD][Settings] Error closing previous client:", err);
         }
@@ -49,22 +55,57 @@ function streamerBotConnect() {
     streamerBotClientActive = new StreamerbotClient({
         host: streamerBotServerAddress,
         port: streamerBotServerPort,
-        //autoReconnect: false, // evita reconectar sozinho
+        scheme: streamerBotSchema,
         onConnect: () => {
+            streamerBotStatus.connected = true;
+            streamerBotStatus.disconnected = false;
+            streamerBotStatus.error = false;
+            
+            (async () => {
+                console.debug("[ChatRD][Settings] Getting streamer info from Streamer.bot...");
+                streamerInfo.get = await getStreamerInfo();
+                console.debug("[ChatRD][Settings] Streamer info saved.", streamerInfo.get);
+            })();
+
             notifySuccess({
-                title: 'Connected to Streamer.bot',
+                title: 'ChatRD 🤝 Streamer.bot',
                 text: ``
             });
+            
         },
         onDisconnect: () => {
             console.debug("[ChatRD][Settings] Streamer.bot disconnected.");
+
+            if (streamerBotStatus.disconnected === true) return;
+            notifyError({
+                title: 'ChatRD ❌ Streamer.bot',
+                text: ``
+            });
+
+            streamerBotStatus.connected = false;
+            streamerBotStatus.disconnected = true;
+            streamerBotStatus.error = true;
+        },
+        onError: (err) => {
+            
+            if (streamerBotStatus.error === true) return;
+
+            console.debug("[ChatRD][Settings] Streamer.bot connection error.");
+
+            notifyError({
+                title: 'ChatRD ⚠️ Streamer.bot',
+                text: `Error connecting to Streamer.bot.`
+            });
+            
+            streamerBotStatus.connected = false;
+            streamerBotStatus.disconnected = true;
+            streamerBotStatus.error = true;
         }
     });
 
     return streamerBotClientActive;
 }
 
-// mantém o const fixo apontando para a primeira conexão
 const streamerBotClient = streamerBotConnect();
 
 
@@ -76,7 +117,7 @@ async function getStreamerInfo() {
 function getURLParam(param, defaultValue) {
     const urlParams = new URLSearchParams(window.location.search);
     const value = urlParams.get(param);
-
+    
     if (value === 'true') return true;
     if (value === 'false') return false;
     if (value === null) return defaultValue;
@@ -84,13 +125,93 @@ function getURLParam(param, defaultValue) {
     return value;
 }
 
+
+function getURLParamLegacy(param, newParam) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const value = urlParams.get(param);
+    
+    if (value === null) {
+        return newParam();
+    }
+    else {
+        return value;
+    }
+}
+
+
+
 function registerPlatformHandlersToStreamerBot(handlers, logPrefix = '') {
     for (const [event, handler] of Object.entries(handlers)) {
         streamerBotClient.on(event, (...args) => {
             if (logPrefix) {
-                console.debug(`${logPrefix} ${event}`, args[0]);
+                if (event != 'General.Custom') {
+                    console.debug(`${logPrefix} ${event}`, args[0]);
+                }
             }
             handler(...args);
         });
     }
+}
+
+
+async function waitForStreamerBot(platformName = '') {
+    const checkInterval = 1000;
+
+    return new Promise((resolve) => {
+        (function check() {
+            if (streamerBotStatus && streamerBotStatus.connected === true) {
+                console.debug(`[ChatRD][StreamerBot] Connected. Releasing "${platformName}".`);
+                resolve();
+                return;
+            }
+            console.debug(`[ChatRD][StreamerBot] Waiting for connection to release "${platformName}"...`);
+            setTimeout(check, checkInterval);
+        })();
+    });
+}
+
+
+const pushNotify = (data) => {
+
+    const SimpleNotify = {
+        effect: 'fade',
+        speed: 500,
+        customClass: 'toasty',
+        customIcon: '',
+        showIcon: true,
+        showCloseButton: true,
+        autoclose: true,
+        autotimeout: 3000,
+        notificationsGap: null,
+        notificationsPadding: null,
+        type: 'outline',
+        position: 'x-center bottom',
+        customWrapper: '',
+    };
+    const mergedData = {
+        ...SimpleNotify,
+        ...data
+    }
+    new Notify (mergedData);
+    
+}
+
+const notifyError = (err) => {
+    err.status = 'error';
+    pushNotify(err);
+}
+
+const notifyInfo = (info) => {
+    info.status = 'info';
+    pushNotify(info);
+}
+
+const notifyWarning = (warn) => {
+    warn.status = 'warning';
+    pushNotify(warn);
+}
+
+const notifySuccess = (success) => {
+    success.status = 'success';
+    pushNotify(success);
 }

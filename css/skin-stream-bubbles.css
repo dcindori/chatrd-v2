@@ -274,27 +274,27 @@ body {
 /*  GROUPED MESSAGES — connected bubbles   */
 /* ====================================== */
 
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped {
     margin-bottom: 2px !important;
 }
 
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message {
     padding: 3px 14px 4px calc(var(--chatrd-avatar-size) + 18px) !important;
     border-radius: 4px var(--chatrd-bubble-radius) var(--chatrd-bubble-radius) 4px !important;
     min-height: unset !important;
 }
 
 /* Hide pointer on grouped */
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message::after {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message::after {
     display: none !important;
 }
 
 /* Hide avatar on grouped */
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .info .avatar {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .info .avatar {
     visibility: hidden;
 }
 
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message .actual-message {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message .actual-message {
     margin: 0 !important;
 }
 
@@ -432,11 +432,11 @@ body {
 /*  @ MENTIONS — warm accent border              */
 /* ============================================ */
 
-#chat:not(.oneline):not(.horizontal) .item.chat.streamer-mentioned {
+#chat:not(.oneline):not(.horizontal) .item.msg.streamer-mentioned {
     margin: 0 0 6px 0 !important;
 }
 
-#chat .item.chat.streamer-mentioned .message {
+#chat .item.msg.streamer-mentioned .message {
     background: rgba(var(--chatrd-bubble-color), var(--chatrd-mention-bg-opacity)) !important;
     border: none !important;
     border-left: 3px solid var(--chatrd-mention-border) !important;
@@ -444,28 +444,28 @@ body {
 }
 
 /* Kill the default red overlay ::before and ::after */
-#chat .item.chat.streamer-mentioned .message::before,
-#chat .item.chat.streamer-mentioned .message::after {
+#chat .item.msg.streamer-mentioned .message::before,
+#chat .item.msg.streamer-mentioned .message::after {
     display: none !important;
     content: none !important;
 }
 
 /* Mention: position avatar relative to .message */
-#chat:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .message .info {
+#chat:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .message .info {
     position: static !important;
 }
 
 /* Platform mention tints */
-#chat .item.twitch.chat.streamer-mentioned .message {
+#chat .item.twitch.msg.streamer-mentioned .message {
     border-left-color: var(--platform-twitch) !important;
 }
-#chat .item.youtube.chat.streamer-mentioned .message {
+#chat .item.youtube.msg.streamer-mentioned .message {
     border-left-color: var(--platform-youtube) !important;
 }
-#chat .item.tiktok.chat.streamer-mentioned .message {
+#chat .item.tiktok.msg.streamer-mentioned .message {
     border-left-color: var(--platform-tiktok) !important;
 }
-#chat .item.kick.chat.streamer-mentioned .message {
+#chat .item.kick.msg.streamer-mentioned .message {
     border-left-color: var(--platform-kick) !important;
 }
 
@@ -844,7 +844,7 @@ body {
 /*  MODERATION          */
 /* ==================== */
 
-.item.chat .chatmoderation button {
+.item.msg .chatmoderation button {
     background: rgba(0,0,0,0.4) !important;
     border-radius: 6px !important;
 }
@@ -880,4 +880,24 @@ body {
 #chat.horizontal .user {
     font-family: "Quicksand", sans-serif !important;
     font-weight: 700 !important;
+}
+
+
+/* Upstream ChatRD now renders the username as a link inside .user and
+   colours the link per user. This skin colours .user itself, so make the
+   link inherit from it. */
+#chat .user a,
+#chat-toasts .user a {
+    display: inline;
+    color: inherit !important;
+    text-decoration: none;
+    text-shadow: inherit;
+    -webkit-text-stroke: inherit;
+    paint-order: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+}
+#chat .user a:hover,
+#chat-toasts .user a:hover {
+    text-shadow: inherit;
 }

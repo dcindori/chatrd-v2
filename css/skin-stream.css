@@ -207,13 +207,13 @@ body {
 }
 
 /* Grouped: hide dot, keep avatar padding */
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message {
     padding: 1px 8px 2px 32px !important;
 }
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message::before {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message::before {
     visibility: hidden;
 }
-#chat:not(.horizontal):not(.oneline) .item.chat.grouped .message .actual-message {
+#chat:not(.horizontal):not(.oneline) .item.msg.grouped .message .actual-message {
     grid-column: 2;
 }
 
@@ -383,11 +383,11 @@ body {
 /*  @ MENTIONS  — thin platform-colored border  */
 /* ============================================ */
 
-#chat:not(.oneline):not(.horizontal) .item.chat.streamer-mentioned {
+#chat:not(.oneline):not(.horizontal) .item.msg.streamer-mentioned {
     margin: 0 0 2px 0 !important;
 }
 
-#chat .item.chat.streamer-mentioned .message {
+#chat .item.msg.streamer-mentioned .message {
     background: rgba(var(--chatrd-bubble-color), var(--chatrd-mention-bg-opacity)) !important;
     border: none !important;
     border-left: 2px solid var(--chatrd-mention-border) !important;
@@ -396,30 +396,30 @@ body {
 }
 
 /* Kill the default red overlay ::after */
-#chat .item.chat.streamer-mentioned .message::after {
+#chat .item.msg.streamer-mentioned .message::after {
     display: none !important;
 }
 
 /* Mention: override base position:relative on .info so avatar positions from .message */
-#chat:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .message .info {
+#chat:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .message .info {
     position: static !important;
 }
 /* Mention avatar — compensate for 2px border-left */
-#chat:not(.horizontal):not(.oneline) .item.chat.streamer-mentioned .info .avatar {
+#chat:not(.horizontal):not(.oneline) .item.msg.streamer-mentioned .info .avatar {
     left: 6px;
 }
 
 /* Platform mention tints */
-#chat .item.twitch.chat.streamer-mentioned .message {
+#chat .item.twitch.msg.streamer-mentioned .message {
     border-left-color: var(--platform-twitch) !important;
 }
-#chat .item.youtube.chat.streamer-mentioned .message {
+#chat .item.youtube.msg.streamer-mentioned .message {
     border-left-color: var(--platform-youtube) !important;
 }
-#chat .item.tiktok.chat.streamer-mentioned .message {
+#chat .item.tiktok.msg.streamer-mentioned .message {
     border-left-color: var(--platform-tiktok) !important;
 }
-#chat .item.kick.chat.streamer-mentioned .message {
+#chat .item.kick.msg.streamer-mentioned .message {
     border-left-color: var(--platform-kick) !important;
 }
 
@@ -761,7 +761,7 @@ body {
 /*  MODERATION          */
 /* ==================== */
 
-.item.chat .chatmoderation button {
+.item.msg .chatmoderation button {
     background: rgba(0,0,0,0.4) !important;
     border-radius: 3px !important;
 }
@@ -789,4 +789,24 @@ body {
     background: rgba(var(--chatrd-bubble-color), var(--chatrd-bg-opacity)) !important;
     border: none !important;
     border-radius: var(--chatrd-bubble-radius) !important;
+}
+
+
+/* Upstream ChatRD now renders the username as a link inside .user and
+   colours the link per user. This skin colours .user itself, so make the
+   link inherit from it. */
+#chat .user a,
+#chat-toasts .user a {
+    display: inline;
+    color: inherit !important;
+    text-decoration: none;
+    text-shadow: inherit;
+    -webkit-text-stroke: inherit;
+    paint-order: inherit;
+    font: inherit;
+    letter-spacing: inherit;
+}
+#chat .user a:hover,
+#chat-toasts .user a:hover {
+    text-shadow: inherit;
 }

@@ -3,7 +3,6 @@
 /* ------------------------- */
 
 const showPatreon                   = getURLParam("showPatreon", false);
-
 const showPatreonMemberships        = getURLParam("showPatreonMemberships", true);
 
 // PATREON EVENTS HANDLERS
@@ -15,7 +14,7 @@ const patreonHandlers = {
 };
 
 if (showPatreon) {
-    registerPlatformHandlersToStreamerBot(patreonHandlers, '[Patreon]');
+    registerPlatformHandlersToStreamerBot(patreonHandlers, '[ChatRD][Patreon]');
 }
 
 
@@ -27,7 +26,7 @@ async function patreonMemberships(data) {
     if (showPatreonMemberships == false) return;
 
     const template = eventTemplate;
-	const clone = template.content.cloneNode(true);
+    const clone = template.content.cloneNode(true);
     const messageId = createRandomString(40);
     const userId = createRandomString(40);
 
@@ -51,8 +50,11 @@ async function patreonMemberships(data) {
     var money = (data.attributes.will_pay_amount_cents / 100).toFixed(2);
 
     user.innerHTML = `<strong>${data.attributes.full_name}</strong>`;
-    action.innerHTML = ` donated `;
-    value.innerHTML = `<strong>$${money}</strong>`;
+    
+    // Aplicação da tradução aqui
+    action.innerHTML = tRD('patreon.donated_action');
+    
+    value.innerHTML = `<strong>($${money})</strong>`;
 
     message.remove();
 

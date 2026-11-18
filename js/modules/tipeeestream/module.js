@@ -14,7 +14,7 @@ const tipeeeHandlers = {
 };
 
 if (showTipeee) {
-    registerPlatformHandlersToStreamerBot(tipeeeHandlers, '[Tipeeestream]');
+    registerPlatformHandlersToStreamerBot(tipeeeHandlers, '[ChatRD][Tipeeestream]');
 }
 
 
@@ -24,7 +24,8 @@ if (showTipeee) {
 
 async function tipeeeStreamDonation(data) {
 
-    if (tipeeeStreamDonation == false) return;
+    // Corrigido para verificar a variável de configuração em vez do nome da função
+    if (showTipeeeDonations == false) return;
 
     const template = eventTemplate;
 	const clone = template.content.cloneNode(true);
@@ -51,10 +52,13 @@ async function tipeeeStreamDonation(data) {
     var money = formatCurrency(data.amount,data.currency);
 
     user.innerHTML = `<strong>${data.username}</strong>`;
-    action.innerHTML = ` donated `;
+    
+    // Aplicação da tradução baseada no en.json
+    action.innerHTML = tRD('tipeeestream.donated_action');
+    
     value.innerHTML = `<strong>${money}</strong>`;
 
-    if (data.message) message.innerHTML = `: ${data.message}`;
+    if (data.message) message.innerHTML = `${data.message}`;
 
     addEventItem('tipeeestream', clone, classes, userId, messageId);
 }

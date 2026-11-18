@@ -4,20 +4,31 @@
 
 const showYoutube                       = getURLParam("showYoutube", false);
 const showYouTubeMessages               = getURLParam("showYouTubeMessages", true);
+const showYouTubeNewSubscriber          = getURLParam("showYouTubeNewSubscriber", true);
 const showYouTubeSuperChats             = getURLParam("showYouTubeSuperChats", true);
 const showYouTubeSuperStickers          = getURLParam("showYouTubeSuperStickers", true);
 const showYouTubeSuperStickerGif        = getURLParam("showYouTubeSuperStickerGif", true);
 const showYouTubeMemberships            = getURLParam("showYouTubeMemberships", true);
 const showYouTubeGiftMemberships        = getURLParam("showYouTubeGiftMemberships", true);
 const showYouTubeMembershipsTrain       = getURLParam("showYouTubeMembershipsTrain", true);
+const showYouTubeJewels                 = getURLParam("showYouTubeJewels", true);
 const showYouTubeStatistics             = getURLParam("showYouTubeStatistics", true);
 
-let youtubeStreamer = null;
+const youtubeJewelsComboState = new Map();
 
 let youTubeCustomEmotes = [];
 let youTubeBTTVEmotes = [];
 
 userColors.set('youtube', new Map());
+
+const youtubeStatistics = `
+    <div class="platform youtube" id="youtube" style="display: none;">
+        <img src="js/modules/youtube/images/logo-youtube.svg" alt="">
+        <span class="viewers"><i class="fa-solid fa-user"></i> <span>0</span></span>
+        <span class="likes"><i class="fa-solid fa-thumbs-up"></i> <span>0</span></span>
+        <span class="title"></span>
+    </div>
+`;
 
 // YOUTUBE EVENTS HANDLERS
 
@@ -25,8 +36,12 @@ const youtubeMessageHandlers = {
     'YouTube.Message': (response) => {
         youTubeChatMessage(response.data);
     },
-    'YouTube.UserBanned': (response) => {
-        youTubeUserBanned(response.data);
+    'YouTube.NewSubscriber': (response) => {
+        youTubeNewSubscriberMessage(response.data);
+    },
+    'YouTube.NewSponsorOnlyStarted': (response) => {
+    },
+    'YouTube.NewSponsorOnlyEnded': (response) => {
     },
     'YouTube.SuperChat': (response) => {
         youTubeSuperChatMessage(response.data);
@@ -46,30 +61,49 @@ const youtubeMessageHandlers = {
     'YouTube.GiftMembershipReceived': (response) => {
         youTubeGiftBombReceivedMessage(response.data);
     },
+    'YouTube.JewelsGifted': (response) => {
+        youTubeJewels(response.data);
+    },
+
     'YouTube.StatisticsUpdated': (response) => {
         youTubeUpdateStatistics(response.data);
     },
     'YouTube.BroadcastUpdated': (response) => {
         youTubeAddStatistics(response.data);
+    },
+
+    
+    'YouTube.UserTimedout': (response) => {
+        youTubeUserBanned(response.data);
+    },
+
+    
+    'YouTube.UserBanned': (response) => {
+        youTubeUserBanned(response.data);
+    },
+
+
+    'YouTube.BroadcastEnded': (response) => {
+        
+        if ((showYouTubeStatistics == true) && (showPlatformStatistics == true)) {
+            document.querySelector('#statistics').insertAdjacentHTML('beforeend', youtubeStatistics);
+            document.querySelector('#youtube').style.display = '';
+        }
+        
     }
 };
 
-const youtubeStatistics = `
-    <div class="platform youtube" id="youtube" style="display: none;">
-        <img src="js/modules/youtube/images/logo-youtube.svg" alt="">
-        <span class="viewers"><i class="fa-solid fa-user"></i> <span>0</span></span>
-        <span class="likes"><i class="fa-solid fa-thumbs-up"></i> <span>0</span></span>
-        <span class="title"></span>
-    </div>
-`;
-
 
 if (showYoutube) {
-    document.querySelector('#statistics').insertAdjacentHTML('beforeend', youtubeStatistics);
 
-    if (showYouTubeStatistics == true) { document.querySelector('#youtube').style.display = ''; }
+    if ((showYouTubeStatistics == true) && (showPlatformStatistics == true)) {
+        document.querySelector('#statistics').insertAdjacentHTML('beforeend', youtubeStatistics);
+        document.querySelector('#youtube').style.display = '';
+    }
 
-    registerPlatformHandlersToStreamerBot(youtubeMessageHandlers, '[YouTube]');
+    waitForStreamerBot('YouTube').then(() => {
+        registerPlatformHandlersToStreamerBot(youtubeMessageHandlers, '[ChatRD][YouTube]');
+    });
 }
 
 
@@ -112,7 +146,8 @@ async function youTubeChatMessage(data) {
             .map(el => [el.className, el])
     );
 
-    const classes = ['youtube', 'chat'];
+    const classes = ['youtube', 'msg'];
+    const roles = []; 
 
     const verticalTags = ["vertical", "shorts"];
     const isVertical = data.broadcast.tags.some(item =>
@@ -133,24 +168,27 @@ async function youTubeChatMessage(data) {
 
     
 
-    if (isOBS == false) {
-        if (youtubeStreamer == null) {
-            const streamerInfo = await getStreamerInfo();
-            youtubeStreamer = streamerInfo.platforms.youtube;
-        }
-        
-        if (data.message.toLowerCase().includes( youtubeStreamer.broadcastUserName.toLowerCase() )) {
-            classes.push('streamer-mentioned');
-        }
+    const youtubeStreamer = streamerInfo.get.platforms.youtube.broadcastUserName;
+
+    if (data.message.toLowerCase().includes( youtubeStreamer.toLowerCase() )) {
+        classes.push('streamer-mentioned');
     }
 
 
 
     var color = await createRandomColor('youtube', data.user.name);
-
-    user.textContent = data.user.name;
-
     
+    
+
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.user.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.style = `--user-color: ${color}`;
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
     message.textContent = data.message;
     await getYouTubeEmotes(data, message);
 
@@ -160,9 +198,60 @@ async function youTubeChatMessage(data) {
     } else avatar.remove();
     if (showBadges) badges.innerHTML = badgeList; else badges.remove();
 
-    if (data.user.isOwner) { classes.push('streamer'); }
+    if (data.user.isSponsor) { roles.push('sponsor'); }
+    if (data.user.isModerator) { roles.push('moderator'); }
+    if (data.user.isVerified) { classes.push('verified'); }
+    if (data.user.isOwner) {
+        roles.push('streamer');
+        userLinkElement.style = `--user-color: #000000`;
+    }
+
+    if (roles.length == 0) roles.push('user');
+    classes.push(...roles);
 
     addMessageItem('youtube', clone, classes, userId, messageId);
+}
+
+
+
+async function youTubeNewSubscriberMessage(data) {
+
+    if (showTwitchFollows == false) return;
+
+    const template = eventTemplate;
+	const clone = template.content.cloneNode(true);
+    const messageId = createRandomString(40);
+    const userId = data.id;
+
+    const {
+        header,
+        platform,
+        user,
+        action,
+        value,
+        'actual-message': message
+    } = Object.fromEntries(
+        [...clone.querySelectorAll('[class]')]
+            .map(el => [el.className, el])
+    );
+
+    const classes = ['youtube', 'new-subscriber'];
+
+    header.remove();
+    //message.remove();
+    value.remove();
+
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.name;
+    userLinkElement.title = `${data.name} @ ${userLink}`;
+
+    action.innerHTML = tRD('youtube.new_subscriber_action');
+
+    addEventItem('youtube', clone, classes, userId, messageId);
 }
 
 
@@ -201,8 +290,16 @@ async function youTubeSuperChatMessage(data) {
     header.remove();
 
     
-    user.textContent = data.user.name;
-    action.innerHTML = ` superchatted `;
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.user.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
+
+    action.innerHTML = tRD('youtube.superchat_action');
     value.innerHTML = `<strong>${data.amount}</strong>`;
 
     message.textContent = data.message;
@@ -210,8 +307,6 @@ async function youTubeSuperChatMessage(data) {
 
     addEventItem('youtube', clone, classes, userId, messageId);
 }
-
-
 
 async function youTubeSuperStickerMessage(data) {
     
@@ -251,8 +346,15 @@ async function youTubeSuperStickerMessage(data) {
         header.remove();
     }
     
-    user.textContent = data.user.name;
-    action.innerHTML = ` sent a supersticker `;
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.user.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
+    action.innerHTML = tRD('youtube.supersticker_action');
 
     value.innerHTML = `<strong>(${data.amount})</strong>`;
     
@@ -296,11 +398,19 @@ async function youTubeNewSponsorMessage(data) {
     header.remove();
 
     
-    user.textContent = data.user.name;
-    action.innerHTML = ` became a member for `;
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.user.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
+
+    action.innerHTML = tRD('youtube.sponsor_action');
 
     //var months = data.months > 1 ? 'months' : 'month';
-    var months = formatSubMonthDuration(data.months);
+    var months = formatSubMonthDuration( (data.months ?? 1) );
     value.innerHTML = `<strong>${months}</strong>`;
 
     if (data.message) {
@@ -311,6 +421,8 @@ async function youTubeNewSponsorMessage(data) {
 
     addEventItem('youtube', clone, classes, userId, messageId);
 }
+
+
 
 
 
@@ -347,11 +459,19 @@ async function youTubeGiftBombMessage(data) {
     header.remove();
 
     
-    user.textContent = data.user.name;
-    action.innerHTML = ` gifted `;
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.user.url}`;
 
-    var count = data.count > 1 ? 'memberships' : 'membership';
-    value.innerHTML = `<strong>${data.count} ${count} (Tier ${data.tier})</strong> to the channel`;
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.user.name;
+    userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
+
+    action.innerHTML = tRD('youtube.giftbomb_action');
+
+    var count = data.count > 1 ? tRD('youtube.giftbomb_plural') : tRD('youtube.giftbomb_singular');
+    value.innerHTML = `<strong>${data.count} ${count}</strong>${tRD('youtube.giftbomb_suffix')}`;
 
     message.remove();
 
@@ -393,8 +513,16 @@ async function youTubeGiftBombReceivedMessage(data) {
     header.remove();
 
     
-    user.textContent = data.gifter.name;
-    action.innerHTML = ` gifted a membership to `;
+    const userLinkElement = user.querySelector('a');
+    const userLink = `${data.gifter.url}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = data.gifter.name;
+    userLinkElement.title = `${data.gifter.name} @ ${userLink}`;
+
+    
+    action.innerHTML = tRD('youtube.giftbomb_received_action');
     value.innerHTML = `<strong>${escapeHTML(data.user.name)}</strong>`;
 
     message.remove();
@@ -404,10 +532,123 @@ async function youTubeGiftBombReceivedMessage(data) {
 
 
 
+async function youTubeJewels(data) {
+
+    if (showYouTubeJewels == false) return;
+
+    const jewelsKey = `${data.user.id}::${data.name}`;
+    const jewelsDurationMs = Math.round(data.duration.seconds * 1000);
+    const jewelsCount = youtubeJewelsComboState.get(jewelsKey);
+
+    if (jewelsCount) { clearTimeout(jewelsCount.timer); }
+
+    const jewelsCountdown = setTimeout(() => {
+
+        const jewelsFinalState = youtubeJewelsComboState.get(jewelsKey);
+        youtubeJewelsComboState.delete(jewelsKey);
+
+        if (jewelsFinalState) {
+
+            const template = eventTemplate;
+            const clone = template.content.cloneNode(true);
+            const messageId = data.eventId;
+            const userId = data.user.id;
+
+            const {
+                header,
+                platform,
+                user,
+                action,
+                value,
+                'actual-message': message
+            } = Object.fromEntries(
+                [...clone.querySelectorAll('[class]')]
+                    .map(el => [el.className, el])
+            );
+
+            const classes = ['youtube', 'jewel'];
+
+            header.remove();
+
+            const userLinkElement = user.querySelector('a');
+            const userLink = `${data.user.url}`;
+
+            userLinkElement.href = userLink;
+            userLinkElement.target = '_blank';
+            userLinkElement.textContent = data.user.name;
+            userLinkElement.title = `${data.user.name} @ ${userLink}`;
+
+            action.innerHTML = tRD('youtube.jewels_action', { count: data.comboCount, name: data.name });
+
+            const rotateDeg = (Math.random() * 60 - 30).toFixed(1) + 'deg';
+            
+            const giftHtml = renderGiftEventSuffix({
+                image : `<img  style="--rotateGift: ${rotateDeg}" src="${data.url}" alt="${data.name}">`, 
+                value : `<i class="fa-regular fa-gem"></i> ${ Math.floor(data.comboCount * data.jewelsAmount) }`
+            });
+
+            value.innerHTML = giftHtml;
+
+            message.remove();
+
+            addEventItem('youtube', clone, classes, userId, messageId);
+
+        }
+    }, jewelsDurationMs);
+
+    youtubeJewelsComboState.set(jewelsKey, { timer: jewelsCountdown, lastData: data });
+}
+
+
+
 async function youTubeUserBanned(data) {
-    chatContainer.querySelectorAll(`[data-user="${data.bannedUser.id}"]:not(.event)`).forEach(element => {
-        element.remove();
+    chatContainer.querySelectorAll(`[data-user="${data.targetUser.id}"]:not(.event)`).forEach(element => {
+        element.parentNode.remove();
     });
+
+
+    if (!chatField) return;
+
+    let description;
+
+    const template = eventTemplate;
+	const clone = template.content.cloneNode(true);
+    const messageId = createRandomString(40);
+    const userId = createRandomString(40);
+
+    const {
+        header,
+        platform,
+        user,
+        action,
+        value,
+        'actual-message': message
+    } = Object.fromEntries(
+        [...clone.querySelectorAll('[class]')]
+            .map(el => [el.className, el])
+    );
+
+    const classes = ['youtube', 'hidden-event', 'user-banned'];
+
+    const targetId = data.targetUser.id;
+    const targetUser = data.targetUser.name;
+    const targetLogin = data.targetUser.login;
+
+    const userLinkElement = user.querySelector('a');
+    const userLink = `https://www.youtube.com/channel/${targetId}`;
+
+    userLinkElement.href = userLink;
+    userLinkElement.target = '_blank';
+    userLinkElement.textContent = targetUser;
+    userLinkElement.title = `${targetUser} @ ${userLink}`;
+
+    description = `was timed out/banned by <strong>${data.moderator.name}</strong>.`;
+
+    header.remove();
+    value.remove();
+    action.innerHTML = `${description}`;
+
+    addHiddenEventItem('youtube', clone, classes, userId, messageId);
 }
 
 
@@ -458,6 +699,7 @@ async function youTubeAddStatistics(data) {
             document.querySelector(`#${elementId} .title`).textContent = title;
         }
     }
+
     else if (status == 'complete') {
         const streamelement = document.querySelector(`#${elementId}`);
         streamelement.remove();
@@ -468,7 +710,6 @@ async function youTubeAddStatistics(data) {
             document.querySelector('#statistics').insertAdjacentHTML('beforeend', youtubeStatistics);
             document.querySelector('#youtube').style.display = '';
         }
-        
     }
 }
 
@@ -486,10 +727,16 @@ async function youTubeUpdateStatistics(data) {
         id: id,
         title: data.broadcast.title,
         tags: data.broadcast.tags
-    })
+    });
 
-    document.querySelector(`#statistics #youtubeStream-${id} .viewers span`).textContent = formatNumber(viewers);
+    const span = document.querySelector(`#statistics #youtubeStream-${id} .viewers span`);
+
+    span.textContent = viewers;
+    span.dataset.viewers = data.concurrentViewers;
+
     document.querySelector(`#statistics #youtubeStream-${id} .likes span`).textContent = formatNumber(likes);
+
+    combinedViewerStatistics();
 }
 
 
@@ -507,43 +754,39 @@ async function youTubeUpdateStatistics(data) {
 // YOUTUBE UTILITY FUNCTIONS
 
 
-
 async function getYouTubeEmotes(data, messageElement) {
     let message = data.message;
     const channelId = data.broadcast?.channelId;
     if (!channelId) return;
 
-    // carrega os emotes customizados
     if (youTubeCustomEmotes.length == 0) {
         streamerBotClient.getGlobals().then((getglobals) => {
             youTubeCustomEmotes = JSON.parse(JSON.parse(getglobals.variables.chatrdytcustomemotes.value));
-            console.debug('[YouTube] Getting YouTube Emotes from Streamer.Bot', youTubeCustomEmotes);
+            console.debug('[ChatRD][YouTube] Getting YouTube Emotes from Streamer.Bot', youTubeCustomEmotes);
         });
     }
 
-    // carrega os BTTV emotes se não carregados ainda
     if (youTubeBTTVEmotes.length === 0) {
         try {
             const res = await fetch(`https://api.betterttv.net/3/cached/users/youtube/${channelId}`);
             const emoteData = await res.json();
-            console.debug('[YouTube] Getting BTTV Channel Emotes', `https://api.betterttv.net/3/cached/users/youtube/${channelId}`, emoteData);
+            console.debug('[ChatRD][YouTube] Getting BTTV Channel Emotes', `https://api.betterttv.net/3/cached/users/youtube/${channelId}`, emoteData);
             youTubeBTTVEmotes = [
                 ...(emoteData.sharedEmotes || []),
                 ...(emoteData.channelEmotes || [])
             ];
             if (youTubeBTTVEmotes.length === 0) {
-                console.debug('[YouTube] No BTTV Emotes found. Setting fake data so we avoid fetching the emotes again.');
+                console.debug('[ChatRD][YouTube] No BTTV Emotes found. Setting fake data so we avoid fetching the emotes again.');
                 youTubeBTTVEmotes = [
                     { code: 'fakeemote', id: 'fakeemote' }
                 ];
             }
         }
         catch (err) {
-            console.warn("[YouTube] Failed to load BTTV emotes:", err);
+            console.warn("[ChatRD][YouTube] Failed to load BTTV emotes:", err);
         }
     }
 
-    // Helper: Twemoji URL
     function getTwemojiUrl(emoji) {
         const codePoints = Array.from(emoji).map(c => c.codePointAt(0).toString(16));
         let fileName = codePoints.join('-');
@@ -551,18 +794,16 @@ async function getYouTubeEmotes(data, messageElement) {
         return `https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/${fileName}.png`;
     }
 
-    // Limpa o elemento
     messageElement.innerHTML = '';
 
-    // monta um mapa de emotes (nome → URL)
     const emoteMap = new Map();
 
-    // BTTV emotes
+    emoteMap.set(':awesome:', 'https://yt3.ggpht.com/xqqFxk7nC5nYnjy0oiSPpeWX4yu4I-ysb3QJMOuVml8dHWz82FvF8bhGVjlosZRIG_XxHA=w48-h48-c-k-nd');
+
     for (const emote of youTubeBTTVEmotes) {
         emoteMap.set(emote.code, `https://cdn.betterttv.net/emote/${emote.id}/1x`);
     }
 
-    // YouTube emotes (Twemoji + normais)
     if (data.emotes) {
         for (const emote of data.emotes) {
             let emoteUrl = emote.imageUrl;
@@ -574,33 +815,27 @@ async function getYouTubeEmotes(data, messageElement) {
         }
     }
 
-    // Custom Member Emotes
     if (data.user.isSponsor === true || data.user.isOwner === true) {
         for (const [name, url] of Object.entries(youTubeCustomEmotes)) {
             emoteMap.set(`:${name}:`, url);
         }
     }
 
-    // Nova quebra: detecta tokens de emotes/emoji mesmo colados
     const tokenRegex = /(:[a-zA-Z0-9_\-]+:)|([\p{Emoji_Presentation}\p{Extended_Pictographic}])/gu;
     let parts = [];
     let lastIndex = 0;
 
     for (const match of message.matchAll(tokenRegex)) {
-        // texto antes do emote
         if (match.index > lastIndex) {
             parts.push(message.slice(lastIndex, match.index));
         }
-        // o próprio emote/emoji
         parts.push(match[0]);
         lastIndex = match.index + match[0].length;
     }
-    // resto do texto
     if (lastIndex < message.length) {
         parts.push(message.slice(lastIndex));
     }
 
-    // monta a mensagem final
     for (const part of parts) {
         if (emoteMap.has(part)) {
             const img = document.createElement('img');
@@ -655,7 +890,7 @@ async function getYouTubeBadges(data) {
     let badgesHTML = [
         isVerified && '<span class="badge verified"><i class="fa-solid fa-check"></i></span>',
         isSponsor && '<span class="badge member"><i class="fa-solid fa-star"></i></span>',
-        isModerator && '<span class="badge mod"><i class="fa-solid fa-wrench"></i></span>',
+        isModerator && '<span class="badge mod"><i class="fa-solid fa-shield"></i></span>',
         isOwner && '<span class="badge owner"><i class="fa-solid fa-video"></i></span>',
     ].filter(Boolean).join('');
 

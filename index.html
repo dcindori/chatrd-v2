@@ -1,978 +1,2088 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="wa-dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChatRD</title>
     
+    <title>ChatRD - Multistream Chat Widget by @VortisRD</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap">
-
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@7.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.9.1/fonts/remixicon.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css">
 
     <link rel="stylesheet" href="css/settings.css">
-</head>
 
+    <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@3.10.0/styles/webawesome.css" />
+    <script type="module" src="https://ka-f.webawesome.com/webawesome@3.10.0/webawesome.loader.js"></script>
+
+
+
+    <!-- SEO !? -->
+    <meta name="description" content="A chat & events overlay/tool for Twitch, YouTube, TikTok, Kick, Streamlabs, StreamElements, Patreon, TipeeeStream, Ko-Fi & Fourthwall.">
+    
+    <link rel="canonical" href="https://vortisrd.github.io/chatrd/">
+
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="ChatRD - Multistream Chat Widget by @VortisRD">
+    <meta property="og:description" content="A chat & events overlay/tool for Twitch, YouTube, TikTok, Kick, Streamlabs, StreamElements, Patreon, TipeeeStream, Ko-Fi & Fourthwall.">
+    <meta property="og:image" content="https://vortisrd.github.io/chatrd/images/chatrd-new-social-image.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="1200"> 
+    <meta property="og:image:alt" content="ChatRD interface overlay showing unified chat">
+    <meta property="og:url" content="https://vortisrd.github.io/chatrd/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ChatRD - Multistream Chat Widget by @VortisRD">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ChatRD - Multistream Chat Widget by @VortisRD">
+    <meta name="twitter:description" content="A chat & events overlay/tool for Twitch, YouTube, TikTok, Kick, Streamlabs, StreamElements, Patreon, TipeeeStream, Ko-Fi & Fourthwall.">
+    <meta name="twitter:image" content="https://vortisrd.github.io/chatrd/images/chatrd-new-social-image.jpg">
+    <meta name="twitter:site" content="@VortisRD">
+
+    <!-- GEO !? -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "ChatRD",
+            "alternateName": "ChatRD - Multistream Chat Widget",
+            "description": "A chat & events overlay/tool for Twitch, YouTube, TikTok, Kick, Streamlabs, StreamElements, Patreon, TipeeeStream, Ko-Fi & Fourthwall.",
+            "url": "https://vortisrd.github.io/chatrd/",
+            "image": "https://vortisrd.github.io/chatrd/images/chatrd-new-social-image.jpg",
+            "applicationCategory": "MultimediaApplication",
+            "operatingSystem": "Web",
+            "browserRequirements": "Requires JavaScript",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "author": {
+                "@type": "Person",
+                "name": "Rodrigo Emanuel (@VortisRD)",
+                "url": "https://rodrigoemanuel.com"
+            }
+        }
+    </script>
+
+
+
+    <link rel="apple-touch-icon" href="images/icons/icon-180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="images/icons/favicon.png">
+    <link rel="manifest" href="images/icons/manifest.json">
+    <meta name="theme-color" content="#121212">
+
+
+
+</head>
 <body>
+
     <div id="container">
         <div class="wrapper">
             <div id="settings">
-                <div class="title"><h1>ChatRD</h1></div>
+
+                <header>
+                    <h1>ChatRD</h1>
+
+                    <div data-i18n-html="readme.text">
+                        Learn how to set it up by <a target="_blank" href="https://youtu.be/udV_VARURgU?si=xO5EtZmYUHGU3sVZ">watching a video</a> or <a target="_blank" href="https://github.com/vortisrd/chatrd/blob/main/README.md">reading the documentation</a>.
+                    </div>
+                </header>
+
+
+
+                <!-- ── Streamer.bot ───────────────────────────────────────── -->
+                <wa-details id="streamerbot" class="section" open>
+
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="images/logo-streamerbot.png" alt="Streamer.bot"> <span data-i18n="streamerbot.title">Streamer.bot</span></span>
+                        <span class="check">
+                            <span class="status">
+                                <wa-badge variant="danger" pill></wa-badge>
+                                <wa-badge variant="success" pill></wa-badge>
+                            </span>
+                        </span>
+                    </span>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="streamerbot.server">Server IP</div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="streamerBotServerAddress" data-default="127.0.0.1" value="127.0.0.1" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="streamerbot.port">Port</div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="streamerBotServerPort" data-default="8080" value="8080" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="streamerbot.schema">Secure Connection (WSS)</div>
+                            <div class="description"><small data-i18n-html="streamerbot.schema_hint">Enable if Streamer.bot is on a remote server (VPS) with HTTPS/TLS. <strong><u>Leave it off if you don't know what you're doing</u> 😊</strong></small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="streamerBotWSS" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                </wa-details>
+                
+
+
+
+
 
                 
-                <form>
+                <!-- ── Speaker.bot ───────────────────────────────────────── -->
+                <wa-details id="speakerbot" class="section">
+
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="images/logo-speakerbot.png" alt="Speaker.bot"> <span data-i18n="speakerbot.title">Speaker.bot</span></span>
+                        <span class="check"><wa-switch data-setting="showSpeakerbot" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="speakerbot.status_label">Status</div>
+                        </div>
+                        <div class="element">
+                            <span class="status">
+                                <wa-badge variant="danger" pill></wa-badge>
+                                <wa-badge variant="success" pill></wa-badge>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="speakerbot.server">Server IP</div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="speakerBotServerAddress" data-default="127.0.0.1" value="127.0.0.1" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="speakerbot.port">Port</div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="speakerBotServerPort" data-default="7580" value="7580" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="speakerbot.chat_read">Enable Chat Read</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="speakerBotChatRead" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="speakerbot.event_read">Enable Events Read</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="speakerBotEventRead" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="speakerbot.voice_alias">Voice Alias</div>
+                            <div class="description"><small data-i18n-html="speakerbot.voice_alias_hint">Set in <strong><em>Settings -> Voice Alias</em></strong> on Speaker.bot</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="speakerBotVoiceAlias" data-default="" value="" placeholder="For example, Maria" data-i18n-placeholder="speakerbot.voice_alias_placeholder" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="speakerbot.chat_template">Chat Message Template</div>
+                            <div class="description"><small data-i18n-html="speakerbot.chat_template_hint">Variables are <strong><em>{user}</em></strong> and <strong><em>{message}</em></strong></small></div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="speakerBotChatTemplate" data-default="{user} said {message}" value="{user} said {message}" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="speakerbot.warning_websocket">Speaker.bot's WebSocket need to be activated and running. <strong><a target="_blank" href="https://speaker.bot/api/websocket">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="speakerbot.warning_engine">You need to set a Speech Engine and a Voice Alias on Speaker.bot. <strong><a target="_blank" href="https://speaker.bot/get-started/speech-engines">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
+                    </div>
+
+
+                </wa-details>
+                
+
+
+
+
+
+                
+
+                <!-- ── General / Setup ───────────────────────────────────── -->
+                <wa-details id="setup" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><i class="ri-settings-4-fill"></i> <span data-i18n="general.title">Global Settings</span></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.demo_mode">Demonstration Mode</div>
+                            <div class="description"><small data-i18n="general.demo_mode_hint">Starts ChatRD in test mode, throwing random messages and events</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="testMode" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="general.language">Language</div>
+                            <div class="description"><small data-i18n="general.language_hint">Set ChatRD's language.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-select data-setting="lang" data-default="en" id="i18n-locale-selector"> 
+                                <wa-option value="de">Deutsch</wa-option>
+                                <wa-option value="en" selected>English</wa-option>
+                                <wa-option value="es-ES">Español</wa-option>
+                                <wa-option value="fr-FR">Français</wa-option>
+                                <wa-option value="it-IT">Italiano</wa-option>
+                                <wa-option value="pt-BR">Português (Brasil)</wa-option>
+                                <wa-option value="pl">Polski</wa-option>
+                                <wa-option value="tl-PH">Filipino</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
                     
 
-                    <div class="platform" id="readme" style="text-align: center;">
-                        You can find the documentation and how to setup ChatRD <a target="_blank" href="https://github.com/vortisrd/chatrd/blob/main/README.md">right here</a>.
-                    </div>
-
-
-                    <div class="platform" id="streamerbot">
-
-                        <div class="config">
-                            <h2><img src="images/logo-streamerbot.png"> Streamer.bot</h2>
-
-                            <div id="streamerBotStatus" class="platform-enable">
-                                <small>Awaiting for connection</small>
-                                <label><i class="fa-solid fa-circle"></i></label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.scroll_bar">Scroll Bar</div>
+                            <div class="description"><small data-i18n="general.scroll_bar_hint">Adds a Scrollbar</small></div>
                         </div>
-
-                        <div class="setup">
-                            <div class="config">
-                                <label>Server</label>
-                                <input type="text" name="streamerBotServerAddress" value="127.0.0.1" class="avoid">
-                            </div>
-                            <div class="config">
-                                <label>Port</label>
-                                <input type="text" name="streamerBotServerPort" value="8080" class="avoid">
-                            </div>
-                        </div>
-
-
-                    </div>
-
-
-
-
-                    <div class="platform" id="speakerbot">
-
-                        <div class="config">
-                            <h2><img src="images/logo-speakerbot.png"> Speaker.bot</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showSpeakerbot"><span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            
-
-                            <div class="config"></div>
-                            
-                            <div class="config">
-                                <label>Speaker.bot Status</label>
-                                <div id="speakerBotStatus" class="platform-enable">
-                                    <small>Awaiting for connection</small>
-                                    <label><i class="fa-solid fa-circle"></i></label>
-                                </div>
-                            </div>
-
-                            <div class="config"></div>
-
-                            <div class="config">
-                                <label>Server</label>
-                                <input type="text" name="speakerBotServerAddress" value="127.0.0.1">
-                            </div>
-                            <div class="config">
-                                <label>Port</label>
-                                <input type="text" name="speakerBotServerPort" value="7580">
-                            </div>
-
-                            <div class="config">
-                                <label>Enable Chat Read</label>
-                                <label class="switch"><input type="checkbox" name="speakerBotChatRead"><span class="slider"></span></label>
-                            </div>
-
-                            
-                            <div class="config">
-                                <label>Enable Events Read</label>
-                                <label class="switch"><input type="checkbox" name="speakerBotEventRead"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>
-                                    Voice Alias<br>
-                                    <small>Set in <strong><em>Settings -> Voice Alias</em></strong> on Speaker.bot.</small>
-                                </label>
-                                <input type="text" name="speakerBotVoiceAlias" placeholder="e.g. Maria">
-                            </div>
-
-                            <div class="config">
-                                <label>
-                                    Chat Message Template<br>
-                                    <small>Variables are <strong><em>{user}</em></strong> and <strong><em>{message}</em></strong>.</small>
-                                </label>
-                                <input type="text" name="speakerBotChatTemplate" value="{user} said {message}">
-                            </div>
-
-                            <hr>
-                            
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> You need to set a Speech Engine and a Voice Alias on Speaker.bot. <strong><a target="_blank" href="https://speaker.bot/get-started/speech-engines">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> Speaker.bot's WebSocket need to be activated and running. <strong><a target="_blank" href="https://speaker.bot/api/websocket">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-
-
+                        <div class="element">
+                            <wa-switch data-setting="scrollbar" data-default="false" size="xl"></wa-switch>
                         </div>
                     </div>
 
+                    <wa-divider></wa-divider>
 
-
-
-
-                    <div class="platform" id="general">
-                        <div class="config">
-                            <h2><i class="fa-solid fa-wrench"></i> Setup</h2>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.sound_notifications">Sound Notifications</div>
+                            <div class="description"><small data-i18n="general.sound_notifications_hints">Plays an audio notification for each new message.</small></div>
                         </div>
-
-                        <div class="setup">
-
-                            <div class="config"><label>Scroll Bar<br><small>Adds a scrollbar.</small></label></label><label class="switch"><input type="checkbox" name="chatScrollBar"><span class="slider"></span></label></div>
-
-                            <div class="config">
-                                <label>Size<br><small>Changes ChatRD's size</small></label>
-                                <label>
-                                    <input type="range" id="font-slider" name="chatFontSize" min="0.1" max="3" step="0.1" value="1">
-                                    <br><em id="font-value" class="slider-value">100%</em>
-                                </label>
-                            </div>
-
-                            <div class="config">
-                                <label>Font Family<br><small>Changes ChatRD's Font</small></label>
-                                <label>
-                                    <input type="text" name="chatFontFamily" value="DM Sans">
-                                </label>
-                            </div>
-
-                            <div class="config">
-                                <label>Background Color<br><small>Changes ChatRD's background color</small></label>
-                                <label>
-                                    <input type="color" name="chatBackground" value="#121212">
-                                </label>
-                            </div>
-                            
-                            <div class="config">
-                                <label>
-                                    <i class="fa-solid fa-arrow-turn-up"></i> Background Opacity<br>
-                                    <small>Changes ChatRD's background color opacity</small>
-                                </label>
-                                <label>
-                                    <input type="range" id="bg-opacity-slider" name="chatBackgroundOpacity" min="0.0" max="1" step="0.1" value="1">
-                                    <br><em id="bg-opacity-value" class="slider-value">1</em>
-                                </label>
-                            </div>
-                            
-                            <hr>
-
-                                <div class="config">
-                                    <label>
-                                        ChatRD Skin<br>
-                                        <small>Changes ChatRD visuals using "SKINS".</small>
-                                    </label>
-                                    <label>
-                                        <select name="chatrdSkin" id="chatrdskins">
-                                            <option value="default" selected>Default</option>
-                                            <option value="nutting">Nutting</option>
-                                            <option value="kimballs">Kimballs</option>
-                                            <option value="bubbles">Bubbles</option>
-                                        </select>
-                                    </label>
-                                </div>
-                                <div class="config">
-                                    <small class="warning">
-                                        <i class="fa-solid fa-circle-info"></i> ChatRD Skin is in <strong>BETA</strong>.
-                                    </small>
-                                </div>
-
-                            <hr>
-
-                            
-                            <div class="config">
-                                <label>
-                                    One Line<br><small>One line chat instead of two in Vertical Chat.</small>
-                                </label>
-                                <label class="switch"><input type="checkbox" name="chatOneLine"><span class="slider"></span></label>
-                            </div>
-                            
-                            <div class="config">
-                                <label>
-                                    Horizontal Direction<br><small>Chat/Events will be horizontal.<br>
-                                    <strong><u>If enabled, it disables "One Line" option above.</u></strong></small>
-                                </label>
-                                <label class="switch"><input type="checkbox" name="chatHorizontal"><span class="slider"></span></label>
-                            </div>
-                            
-                            <div class="config">
-                                <label>
-                                    Group Chat Messages<br><small>Consecutive messages from the same user will be grouped.</small>
-                                </label>
-                                <label class="switch"><input type="checkbox" name="chatMessageGroup"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Platforms<br><small>Shows the platforms logos.</small></label>
-                                <label class="switch"><input type="checkbox" name="showPlatform" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Platforms Dots<br><small>Shows a 12x12px dot with the platform color instead of it's logo.<br>
-                                <strong><u>If enabled, it disables "Platforms" option above.</u></strong> (Twitch ToS is 🤮)</small></label>
-                                    
-                                <label class="switch"><input type="checkbox" name="showPlatformDot"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Avatars</label>
-                                <label class="switch"><input type="checkbox" name="showAvatar" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Timestamps</label>
-                                <label class="switch"><input type="checkbox" name="showTimestamps" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> AM/PM</label>
-                                <label class="switch"><input type="checkbox" name="ampmTimeStamps"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Badges</label>
-                                <label class="switch"><input type="checkbox" name="showBadges" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Platform Statistics<br><small>Shows all platform statistics.</small></label>
-                                <label class="switch"><input type="checkbox" name="showPlatformStatistics" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Ignore Commands<br><small>Ignores texts starting with "!".</small></label>
-                                <label class="switch"><input type="checkbox" name="excludeCommands" checked><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Ignore Chatters<br><small>Separate their names by commas. eg.: StreamLabs,StreamElements</small></label>
-                                <input type="text" name="ignoreChatters" value="Streamlabs,Streamelements">
-                            </div>
-
-                            <div class="config">
-                                <label>Hide Chat Msg<br><small>Hides a message after X seconds. (0 disables it)</small></label>
-                                <input type="number" name="hideAfter" value="0">
-                            </div>
-
-                            <hr>
-                            
-                            <div class="config">
-                                <label>Multi-Streamer Mode<br>
-                                    <small>Changes <strong>Twitch</strong> to <em class="msm-platform purple">Purple Platform</em>, <strong>YouTube</strong> to <em class="msm-platform red">Red Platform</em>,<br><strong>Kick</strong> to <em class="msm-platform green">Green Platform</em> and <strong>TikTok</strong> to <em class="msm-platform vertical">Short Video App</em><br>on all chat messages.
-                                    </small>
-                                </label>
-                                <label class="switch"><input type="checkbox" name="multiStreamerMode"><span class="slider"></span></label>
-                            </div>
-
-                            <hr>
-
-                            <div class="config">
-                                <label>Chat Field<br><small>Adds a chat field for you to type in your chat.</small></label>
-                                <label class="switch"><input type="checkbox" name="chatField"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <label>Moderation Buttons<br><small>Adds buttons for moderator actions.</small></label>
-                                <label class="switch"><input type="checkbox" name="chatModeration"><span class="slider"></span></label>
-                            </div>
-
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-info"></i> The Chat Field also accepts <strong>/commands</strong>. <strong><a target="_blank" href="https://github.com/vortisrd/chatrd#-commands-supported-by-the-chat-field">Commands Supported</a>.</strong>
-                                </small>
-                            </div>
-
+                        <div class="element">
+                            <wa-switch data-setting="playSound" data-default="false" size="xl"></wa-switch>
                         </div>
                     </div>
 
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.sound_notifications_chat"><i class="ri-corner-down-right-line"></i> Play on Chat Messages</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="playSoundOnChat" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
 
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.sound_notifications_events"><i class="ri-corner-down-right-line"></i> Play on Events</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="playSoundOnEvents" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
 
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.sound_notifications_list">Sound List</div>
+                            <div class="description"><small data-i18n="general.sound_notifications_list_hints">Select the sound you want to play.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-select data-setting="playSoundFile" data-default="retro-game">
+                                <wa-option value="alert-marimba-bubble">Alert Marimba Bubble</wa-option>
+                                <wa-option value="beep-digital-short">Beep Digital Short</wa-option>
+                                <wa-option value="bubble-pop">Bubble Pop</wa-option>
+                                <wa-option value="flight-announcement">Flight Announcement</wa-option>
+                                <wa-option value="notification-bell-alert">Notification Bell Alert</wa-option>
+                                <wa-option value="notification-digital-chime">Notification Digital Chime</wa-option>
+                                <wa-option value="organic-pop">Organic Pop</wa-option>
+                                <wa-option value="pop-bottle-opening">Pop Bottle Opening</wa-option>
+                                <wa-option value="positive-notification-digital-beep">Positive Notification Digital Beep</wa-option>
+                                <wa-option value="retro-game">Retro Game</wa-option>
+                                <wa-option value="ui-alert-synth-beep">UI Alert Synth Beep</wa-option>
+                                <wa-option value="ui-ding">UI Ding</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
 
-                    <div class="platform" id="twitch">
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.sound_notifications_volume">Volume</div>
+                        </div>
+                        <div class="element">
+                             <wa-slider class="slider_percent" data-setting="playSoundVolume" data-default="0.5" min="0" max="1" value="0" step="0.05" with-tooltip></wa-slider>
+                        </div>
+                    </div>
 
-                        <div class="config">
-                            <h2><img src="js/modules/twitch/images/logo-twitch.svg">Twitch</h2>
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.sound_notifications_group">Group Every</div>
+                            <div class="description"><small data-i18n-html="general.sound_notifications_group_hint">Plays the notification again if several messages arrive in a row without a pause.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-number-input data-setting="playMsgBatch" value="1" data-default="1"></wa-number-input>
+                        </div>
+                    </div>
 
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showTwitch"><span class="slider"></span>
-                                </label>
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.sound_notifications_interval">Silence Interval</div>
+                            <div class="description"><small data-i18n-html="general.sound_notifications_interval_hint">Time without new messages before a pending notification plays.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-number-input data-setting="playMsgSilence" value="1" data-default="1"></wa-number-input>
+                        </div>
+                    </div>
+
+                    <div class="config full align-middle">
+                        <wa-button class="button" id="playSoundButton" variant="brand">
+                            <span data-i18n-html="general.sound_notifications_test">Test Notification</span>
+                        </wa-button>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.highlight_messages">Highlight Messages</div>
+                            <div class="description"><small data-i18n="general.highlight_messages_hint">Highlight messages that mentions you.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="highlightMessages" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.group_messages">Group Chat Messages</div>
+                            <div class="description"><small data-i18n="general.group_messages_hint">Consecutive messages from the same user will be grouped</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="chatMessageGroup" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.avatars">Avatars</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showAvatar" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.timestamps">Timestamps</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTimestamps" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="general.ampm"><i class="ri-corner-down-right-line"></i> AM/PM</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="ampm" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.badges">Badges</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showBadges" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.ignore_commands">Ignore Commands</div>
+                            <div class="description"><small data-i18n="general.ignore_commands_hint">Ignores texts starting with "!"</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="excludeCommands" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.ignore_chatters">Ignore Chatters</div>
+                            <div class="description"><small data-i18n="general.ignore_chatters_hint">Separate the usernames by commas. eg.: Streamlabs,Streamelements</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="ignoreChatters" data-default="Streamlabs,Streamelements" value="Streamlabs,Streamelements" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.hide_after">Hide Items</div>
+                            <div class="description"><small data-i18n-html="general.hide_after_hint">Hides an item after a certain amount of seconds.<br>Setting at zero disables it</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-number-input data-setting="hide" value="0" data-default="0"></wa-number-input>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.platform">Platform</div>
+                            <div class="description"><small data-i18n="general.platform_hint">Shows the platforms logos.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showPlatform" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.platform_statistics">Platform Statistics</div>
+                            <div class="description"><small data-i18n="general.platform_statistics_hint">Shows all platform statistics.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showPlatformStatistics" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="general.platform_views_combined"><i class="ri-corner-down-right-line"></i> Combine Platform Viewers</div>
+                            <div class="description"><small data-i18n="general.platform_views_combined_hint">Combine the viewer counts from all enabled platforms.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="combineViewers" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.moderation_buttons">Moderation Buttons</div>
+                            <div class="description"><small data-i18n="general.moderation_buttons_hint">Adds buttons for moderator actions.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="chatModeration" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="general.chat_field">Chat Field</div>
+                            <div class="description"><small data-i18n="general.chat_field_hint">Adds a chat field for you to type in your chat.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="chatField" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="general.chat_field_warning">The Chat Field also accepts <strong>/commands</strong>. <strong><a target="_blank" href="https://github.com/vortisrd/chatrd#-commands-supported-by-the-chat-field">Commands Supported</a></strong></span>
+                        </wa-callout>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.image_embedding_filter">Image Embedding Filter</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="imageEmbeddingFilter" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config full">
+                        <div class="info">
+                            <div class="description">
+                                <small data-i18n-html="general.image_embedding_filter_hint">If enabled, only images from the domains below are allowed to be embedded images. Separate them by commas. <strong>e.g: <em>imgur.com,tenor.com,giphy.com</em></strong></small>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-
-                                <div class="config">
-                                    <label><strong>Chat</strong><br><small>Reads Twitch chat.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchMessages" checked><span class="slider"></span></label>
-                                </div>
-
-                                <div class="config">
-                                    <label>Followers</label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchFollows" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Bits</label><label class="switch">
-                                        <input type="checkbox" name="showTwitchBits" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Announcements</label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchAnnouncements" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Watch Streaks<br><small>Shows Watch Streaks in chat.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchWatchStreak"><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Subscriptions<br><small>Shows Sub events. <u><strong>Disabling this disables all sub events</strong></u>.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchSubs" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Subs<br><small>When a user gifts another user a sub.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchGiftedSubs" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Bomb<br><small>When a user gifts subs massively.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchMassGiftedSubs" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Bomb Users Train<br><small>Shows all users that were gifted a  sub on a Gifted Bomb.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchGiftedSubsUserTrain" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Channel Point Rewards</label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchRewardRedemptions" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Raids</label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchRaids" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Shared Chat</label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchSharedChat" checked><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Pronouns<br><small>Shows Pronouns to those whom enabled them on Twitch chat.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchPronouns"><span class="slider"></span></label>
-                                </div>
-                                <div class="config">
-                                    <label>Statistics<br><small>Shows Twitch Viewers.</small></label>
-                                    <label class="switch"><input type="checkbox" name="showTwitchViewers" checked><span class="slider"></span></label>
-                                </div>
-
-                        </div>
-
-
+                    <div class="config full">
+                        <wa-input data-setting="imageEmbeddingFilterDomains" data-default="" value="" autocomplete="off"></wa-input>
                     </div>
 
 
+                </wa-details>
+                
 
 
 
 
 
-                    <div class="platform" id="youtube">
+                
 
-                        <div class="config">
-                            <h2><img src="js/modules/youtube/images/logo-youtube.svg">YouTube</h2>
+                <!-- ── Styling ────────────────────────────────────────────── -->
+                <wa-details id="style" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><i class="ri-paint-fill"></i> <span data-i18n="style.title">Visual Styles</span></span>
+                    </span>
 
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showYoutube"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="general.skin">Skins</div>
+                            <div class="description"><small data-i18n="general.skin_hint">Changes ChatRD visuals using "SKINS"</small></div>
                         </div>
+                        <div class="element">
+                            <wa-select data-setting="skin" data-default="default">
+                                <wa-option value="default" selected data-i18n="general.skin_options.default">Default</wa-option>
+                                <wa-option value="nutting" data-i18n="general.skin_options.nutting">Nutting</wa-option>
+                                <wa-option value="kimballs" data-i18n="general.skin_options.kimballs">Kimballs</wa-option>
+                                <wa-option value="bubbles" data-i18n="general.skin_options.bubbles">Bubbles</wa-option>
+                                <wa-option value="star-wars">Star Wars</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="general.font_family">Font Family</div>
+                            <div class="description"><small data-i18n="general.font_family_hint">Changes ChatRD's font</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="chatFontFamily" data-default="DM Sans" value="DM Sans" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
 
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
+                    <div class="config full" style="display: none;">
+                        <wa-select id="chatRDSelectSystemFont">
+                        </wa-select>
+                    </div>
 
-                            <div class="config">
-                                <label>Chat<br><small>Reads YouTube chat.</small></label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeMessages" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>SuperChat</label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeSuperChats" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Super Sticker</label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeSuperStickers" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Shows Super Sticker GIF</label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeSuperStickerGif" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Membership<br><small>Shows Membership events. <u><strong>Disabling this disables all member events</strong></u>.</small></label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeMemberships" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Membership<br><small>Shows the person gifting members.</small></label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeGiftMemberships" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Membership Train<br><small>Shows all users that were gifted a membership on a massive gifting membership.</small></label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeMembershipsTrain" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Statistics<br><small>Shows YouTube Viewers and Likes.</small></label>
-                                <label class="switch"><input type="checkbox" name="showYouTubeStatistics" checked><span class="slider"></span></label>
-                            </div>
+                    <div class="config full" style="display: none;">
+                        <wa-button id="chatRDLoadFontsFromSystem" variant="brand">
+                            <wa-icon name="font"></wa-icon>
+                            <span data-i18n="style.load_system_fonts">Load System Fonts</span>
+                        </wa-button>
+                    </div>
 
-                            <div class="config">
-                                <label>
-                                    Members Only Emotes
-                                    <br>
-                                    <small>
-                                        You have to add member emotes manually because YouTube's API doesn't relay them to Streamer.bot.
-                                    </small>
-                                </label>
-                            </div>
+                    <wa-divider></wa-divider>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.size">Size</div>
+                            <div class="description"><small data-i18n="general.size_hint">Changes ChatRD's size</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-slider class="slider_percent" data-setting="size" data-default="1" min="0.1" max="3" value="1" step="0.1" with-tooltip></wa-slider>
+                        </div>
+                    </div>
+                    
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.text_outline">Text Outline</div>
+                            <div class="description"><small data-i18n="general.text_outline_hint">Adds a text outline to messages for better visibility</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="outline" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
 
-                            <div class="config">
-                                <div class="emote-list">
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n="general.background_color">Background Color</div>
+                            <div class="description"><small data-i18n="general.background_color_hint">Changes ChatRD's background color</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-color-picker data-setting="chatBackground" size="s" data-default="#121212" value="#121212"></wa-color-picker>
+                        </div>
+                    </div>
 
-                                    <span class="emote-item">
-                                        <button id="addEmoteButton" class="add" title="Add Emote"><i class="fa-solid fa-plus"></i></button>
-                                    </span>
-                                </div>
+                    <div class="config slider">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.background_opacity"><i class="ri-corner-down-right-line"></i> Background Opacity</div>
+                            <div class="description"><small data-i18n="general.background_opacity_hint">Changes ChatRD's background color opacity</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-slider class="slider_percent" data-setting="chatBackgroundOpacity" data-default="0" min="0" max="1" value="0" step="0.05" with-tooltip></wa-slider>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config layout">
+                        <div class="info">
+                            <div class="title" data-i18n="general.layout">Layout</div>
+                        </div>
+                        <div class="element">
+                            
+                            <wa-button-group>
+                                <wa-button appearance="filled" id="vertical-chat">
+                                    <wa-icon library="remixicon" name="design/layout-horizontal-line"></wa-icon>
+                                </wa-button>
+
+                                <wa-button appearance="filled" id="one-line-chat">
+                                    <wa-icon library="remixicon" name="editor/list-view"></wa-icon>
+                                </wa-button>
+
+                                <wa-button appearance="filled" id="horizontal-chat">
+                                    <wa-icon library="remixicon" name="design/layout-bottom-2-line"></wa-icon>
+                                </wa-button>
+                            </wa-button-group>
+
+                            <wa-tooltip for="vertical-chat" data-i18n="general.layout_options.vertical">Vertical</wa-tooltip>
+                            <wa-tooltip for="one-line-chat" data-i18n="general.layout_options.one_line">One Line</wa-tooltip>
+                            <wa-tooltip for="horizontal-chat" data-i18n="general.layout_options.horizontal">Horizontal</wa-tooltip>
+
+                            <label id="layout-checkboxes">
+                                <input type="checkbox" data-setting="chatOneLine" name="chatOneLine" data-default="false">
+                                <input type="checkbox" data-setting="chatHorizontal" name="chatHorizontal" data-default="false">
+                            </label>
+                            
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="general.animation">Animation</div>
+                        </div>
+                        <div class="element">
+                            <wa-select data-setting="animation" data-default="default">
                                 
-                                <!-- Textarea for debugging purposes -->
-                                <textarea name="youTubeCustomEmotes" style="display: none;">"{}"</textarea>
+                                <wa-option value="none" data-i18n="general.animation_options.none">No Animations</wa-option>
+                                <wa-option value="default" data-i18n="general.animation_options.default" selected>Default</wa-option>
+                                <!-- Back entrances -->
+                                <wa-option value="backInDown">backInDown</wa-option>
+                                <wa-option value="backInLeft">backInLeft</wa-option>
+                                <wa-option value="backInRight">backInRight</wa-option>
+                                <wa-option value="backInUp">backInUp</wa-option>
+
+                                <!-- Bouncing entrances -->
+                                <wa-option value="bounceIn">bounceIn</wa-option>
+                                <wa-option value="bounceInDown">bounceInDown</wa-option>
+                                <wa-option value="bounceInLeft">bounceInLeft</wa-option>
+                                <wa-option value="bounceInRight">bounceInRight</wa-option>
+                                <wa-option value="bounceInUp">bounceInUp</wa-option>
+
+                                <!-- Fading entrances -->
+                                <wa-option value="fadeIn">fadeIn</wa-option>
+                                <wa-option value="fadeInDown">fadeInDown</wa-option>
+                                <wa-option value="fadeInDownBig">fadeInDownBig</wa-option>
+                                <wa-option value="fadeInLeft">fadeInLeft</wa-option>
+                                <wa-option value="fadeInLeftBig">fadeInLeftBig</wa-option>
+                                <wa-option value="fadeInRight">fadeInRight</wa-option>
+                                <wa-option value="fadeInRightBig">fadeInRightBig</wa-option>
+                                <wa-option value="fadeInUp">fadeInUp</wa-option>
+                                <wa-option value="fadeInUpBig">fadeInUpBig</wa-option>
+                                <wa-option value="fadeInTopLeft">fadeInTopLeft</wa-option>
+                                <wa-option value="fadeInTopRight">fadeInTopRight</wa-option>
+                                <wa-option value="fadeInBottomLeft">fadeInBottomLeft</wa-option>
+                                <wa-option value="fadeInBottomRight">fadeInBottomRight</wa-option>
+
+                                <!-- Flippers -->
+                                <wa-option value="flipInX">flipInX</wa-option>
+                                <wa-option value="flipInY">flipInY</wa-option>
+
+                                <!-- Lightspeed -->
+                                <wa-option value="lightSpeedInRight">lightSpeedInRight</wa-option>
+                                <wa-option value="lightSpeedInLeft">lightSpeedInLeft</wa-option>
+
+                                <!-- Rotating entrances -->
+                                <wa-option value="rotateIn">rotateIn</wa-option>
+                                <wa-option value="rotateInDownLeft">rotateInDownLeft</wa-option>
+                                <wa-option value="rotateInDownRight">rotateInDownRight</wa-option>
+                                <wa-option value="rotateInUpLeft">rotateInUpLeft</wa-option>
+                                <wa-option value="rotateInUpRight">rotateInUpRight</wa-option>
+
+                                <!-- Specials -->
+                                <wa-option value="jackInTheBox">jackInTheBox</wa-option>
+                                <wa-option value="rollIn">rollIn</wa-option>
+
+                                <!-- Zooming entrances -->
+                                <wa-option value="zoomIn">zoomIn</wa-option>
+                                <wa-option value="zoomInDown">zoomInDown</wa-option>
+                                <wa-option value="zoomInLeft">zoomInLeft</wa-option>
+                                <wa-option value="zoomInRight">zoomInRight</wa-option>
+                                <wa-option value="zoomInUp">zoomInUp</wa-option>
+
+                                <!-- Sliding entrances -->
+                                <wa-option value="slideInDown">slideInDown</wa-option>
+                                <wa-option value="slideInLeft">slideInLeft</wa-option>
+                                <wa-option value="slideInRight">slideInRight</wa-option>
+                                <wa-option value="slideInUp">slideInUp</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n="general.orientation">Orientation</div>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.text_alignment"><i class="ri-corner-down-right-line"></i> Text Alignment</div>
+                        </div>
+                        <div class="element">
+                            <wa-select data-setting="direction" data-default="ltr">
+                                <wa-option value="ltr" data-i18n="general.text_alignment_options.left_to_right" selected>Left to Right</wa-option>
+                                <wa-option value="rtl" data-i18n="general.text_alignment_options.right_to_left">Right to Left</wa-option>
+                                <wa-option value="cc" data-i18n="general.text_alignment_options.centered">Centered</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="general.new_messages_from"><i class="ri-corner-down-right-line"></i> New Messages From</div>
+                        </div>
+                        <div class="element">
+                            <wa-select data-setting="orientation" data-default="btt">
+                                <wa-option value="btt" data-i18n="general.new_messages_from_options.bottom_to_top" selected>Bottom to Top</wa-option>
+                                <wa-option value="ttb" data-i18n="general.new_messages_from_options.top_to_bottom">Top to Bottom</wa-option>
+                                <wa-option value="twitch-chat" data-i18n="general.new_messages_from_options.twitch_chat">Same as Twitch chat</wa-option>
+                            </wa-select>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="general.orientation_warning">Chat Orientation <strong>will not work if Chat Layout is set to <u>Horizontal</u></strong>.</span>
+                        </wa-callout>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="general.chat_field_warning">The Chat Field also accepts <strong>/commands</strong>. <strong><a target="_blank" href="https://github.com/vortisrd/chatrd#-commands-supported-by-the-chat-field">Commands Supported</a></strong></span>
+                        </wa-callout>
+                    </div>
+
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── Twitch ─────────────────────────────────────────────── -->
+                <wa-details id="twitch" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/twitch/images/logo-twitch.svg"> <span data-i18n="twitch.title">Twitch</span></span>
+                        <span class="check"><wa-switch data-setting="showTwitch" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.chat">Chat</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchMessages" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.followers">Followers</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchFollows" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.bits">Bits</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchBits" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.announcements">Announcements</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchAnnouncements" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.watch_streaks">Watch Streaks</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchWatchStreak" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.subscriptions">Subscriptions</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.gifted_subs"><i class="ri-corner-down-right-line"></i> Gifted Subs</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchGiftedSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.gifted_bomb"><i class="ri-corner-down-right-line"></i> Gifted Bomb</div>
+                            <div class="description"><small data-i18n="twitch.gifted_bomb_hint">Shows when a user gifted subs massively.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchMassGiftedSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.gifted_bomb_train"><i class="ri-corner-down-right-line"></i> Gifted Bomb Train</div>
+                            <div class="description"><small data-i18n="twitch.gifted_bomb_train_hint">Shows when a user gifted subs massively.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchGiftedSubsUserTrain" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.channel_points">Channel Point Rewards</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchRewardRedemptions" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.powerups">Power-up Redemptions</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchPowerUpRedemptions" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.powerups_enable"><i class="ri-corner-down-right-line"></i> Enable Power-up Effects</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="enableTwitchPowerUpEffects" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.powerups_notifications"><i class="ri-corner-down-right-line"></i> Enable Power-up Notifications</div>
+                            <div class="description"><small data-i18n="twitch.powerups_notifications_hint">Disable this if you want the effects only, with no event notifications</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="enableTwitchPowerUpNotifications" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.raids">Raids</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchRaids" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.shared_chat">Shared Chat</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchSharedChat" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.pronouns">Pronouns</div>
+                            <div class="description"><small data-i18n="twitch.pronouns_hint">Shows Pronouns to those whom enabled them on Twitch chat.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchPronouns" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.statistics">Statistics</div>
+                            <div class="description"><small data-i18n="twitch.statistics_hint">Shows Twitch Viewers.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchViewers" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.hype_train_section">Hype Train</div>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.hype_train_event"><i class="ri-corner-down-right-line"></i> Hype Train Event</div>
+                            <div class="description"><small data-i18n="twitch.hype_train_event_hint">Shows when a Hype Train event starts, levels up and ends.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchHypeTrain" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.hype_train_bar"><i class="ri-corner-down-right-line"></i> Hype Train Bar</div>
+                            <div class="description"><small data-i18n="twitch.hype_train_bar_hint">Show the Hype Train Bar under the Statistics.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchHypeTrainBar" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.goals_section">Goals</div>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.goal_event"><i class="ri-corner-down-right-line"></i> Goal Event</div>
+                            <div class="description"><small data-i18n="twitch.goal_event_hint">Shows when a Goal event starts, progress and completes.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchGoals" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.goal_bars"><i class="ri-corner-down-right-line"></i> Goal Bars</div>
+                            <div class="description"><small data-i18n="twitch.goal_bars_hint">Show a Goal Bar for each goal under the Statistics.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchGoalsBars" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.seventv_paint_label">7TV Paints</div>
+                            <div class="description"><small data-i18n="twitch.seventv_paint_hint">Transforms the username with 7TV Paint.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchSevenTVPaint" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n="twitch.seventv_paint_info">The user needs to have a 7TV Sub and Nametag Paint Enabled.</span>
+                        </wa-callout>
+                    </div>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.embed_images_label">Twitch Embedded Images</div>
+                            <div class="description"><small data-i18n="twitch.embed_images_hint">Turn image links into embedded images in ChatRD</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTwitchEmbedImages" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="twitch.embedding_roles"><i class="ri-corner-down-right-line"></i> Embedding Permissions</div>
+                            <div class="description"><small data-i18n="twitch.embedding_roles_hint">Select which roles would be able to embed images.</small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="twitchEmbedImageRoles" data-default="streamer,moderator"  placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer" data-i18n="twitch.embed_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="twitch.embed_roles.moderator">Mods</wa-option>
+                        <wa-option value="vip" data-i18n="twitch.embed_roles.vip">Vips</wa-option>
+                        <wa-option value="tier-one-sub" data-i18n="twitch.embed_roles.tier_one">Tier 1 Sub</wa-option>
+                        <wa-option value="tier-two-sub" data-i18n="twitch.embed_roles.tier_two">Tier 2 Sub</wa-option>
+                        <wa-option value="tier-three-sub" data-i18n="twitch.embed_roles.tier_three">Tier 3 Sub</wa-option>
+                    </wa-select>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="twitch.role_selection">Speaker.bot Roles</div>
+                            <div class="description"><small data-i18n-html="twitch.role_selection_hint">If Speaker.bot is enabled, only the roles selected below will have their messages spoken over TTS. <strong>Events will not be filtered by this.</strong></small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="twitchTTSRoles" data-default="user" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer" data-i18n="twitch.tts_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="twitch.tts_roles.moderator">Mods</wa-option>
+                        <wa-option value="vip" data-i18n="twitch.tts_roles.vip">VIPs</wa-option>
+                        <wa-option value="tier-one-sub" data-i18n="twitch.tts_roles.tier_one">Tier 1 Subs</wa-option>
+                        <wa-option value="tier-two-sub" data-i18n="twitch.tts_roles.tier_two">Tier 2 Subs</wa-option>
+                        <wa-option value="tier-three-sub" data-i18n="twitch.tts_roles.tier_three">Tier 3 Subs</wa-option>
+                        <wa-option value="user" data-i18n="twitch.tts_roles.normal_user">Normal User</wa-option>
+                    </wa-select>
+
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── YouTube ───────────────────────────────────────────── -->
+                <wa-details id="youtube" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/youtube/images/logo-youtube.svg"> <span data-i18n="youtube.title">YouTube</span></span>
+                        <span class="check"><wa-switch data-setting="showYoutube" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.chat">Chat</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeMessages" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.new_subscriber">New Subscriber</div>
+                            <div class="description"><small data-i18n-html="youtube.new_subscriber_hint">Streamer.bot polls your YouTube channel for new subscribers every 5 seconds and sends the data to ChatRD.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeNewSubscriber" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="youtube.new_subscriber_info">You will not receive a New Subscriber event for users that have their Subscriptions Private, and/or if the Google account does not have a YouTube Channel created.</span>
+                        </wa-callout>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.superchat">Super Chat</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeSuperChats" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.super_sticker">Super Sticker</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeSuperStickers" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="youtube.super_sticker_gif"><i class="ri-corner-down-right-line"></i> Enable Super Sticker Image</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeSuperStickerGif" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.memberships">Membership</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeMemberships" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="youtube.gifted_membership"><i class="ri-corner-down-right-line"></i> Gifted Memberships</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeGiftMemberships" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="youtube.gifted_membership_train"><i class="ri-corner-down-right-line"></i> Gifted Membership Train</div>
+                            <div class="description"><small data-i18n="youtube.gifted_membership_train_hint">Shows the a list of users gifted by the gifted bomb.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeMembershipsTrain" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.jewels">Jewels</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeJewels" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.statistics">Statistics</div>
+                            <div class="description"><small data-i18n="youtube.statistics_hint">Shows YouTube Viewers and Likes</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeStatistics" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.custom_emotes_label">Members Only Emotes</div>
+                            <div class="description"><small data-i18n="youtube.custom_emotes_hint">You have to add member emotes manually because YouTube's API doesn't relay them to Streamer.bot.</small></div>
+                        </div>
+                    </div>
+                    
+                    <div class="config">
+                        <div id="youtube-member-emote-list">
+
+                            <div class="emote-item add">
+                                <button id="addEmoteButton"><i class="ri-add-large-fill"></i></button>
                             </div>
 
-
                         </div>
+                    </div>
 
+                    <div class="config">
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="youtube.custom_emote_information"><strong>Don't use Discord, Imgur or any temporary image hosting platforms to host your emotes.</strong> You could right click on the emote image on YouTube and copy the image URL. <a href="https://youtu.be/udV_VARURgU?si=5qcQUW-M94qFrXys&t=344" target="_blank">Watch my Video Tutorial</a> 😊</span>
+                        </wa-callout>
+                    </div>
+                    
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.embed_images_label">YouTube Embedded Images</div>
+                            <div class="description"><small data-i18n="youtube.embed_images_hint">Turn image links into embedded images in ChatRD</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showYouTubeEmbedImages" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="youtube.embedding_roles"><i class="ri-corner-down-right-line"></i> Embedding Permissions</div>
+                            <div class="description"><small data-i18n="youtube.embedding_roles_hint">Select which roles would be able to embed images.</small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="youtubeEmbedImageRoles" data-default="streamer,moderator" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer" data-i18n="youtube.embed_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="youtube.embed_roles.moderator">Mods</wa-option>
+                        <wa-option value="sponsor" data-i18n="youtube.embed_roles.member">Members</wa-option>
+                    </wa-select>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="youtube.role_selection">Speaker.bot Roles</div>
+                            <div class="description"><small data-i18n-html="youtube.role_selection_hint">If Speaker.bot is enabled, only the roles selected below will have their messages spoken over TTS. <strong>Events will not be filtered by this.</strong></small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="youtubeTTSRoles" data-default="user" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer" data-i18n="youtube.tts_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="youtube.tts_roles.moderator">Mods</wa-option>
+                        <wa-option value="sponsor" data-i18n="youtube.tts_roles.member">Members</wa-option>
+                        <wa-option value="user" data-i18n="youtube.tts_roles.normal_user">Normal User</wa-option>
+                    </wa-select>
+
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── Kick ──────────────────────────────────────────────── -->
+                <wa-details id="kick" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/kick/images/logo-kick.svg"> <span data-i18n="kick.title">Kick</span></span>
+                        <span class="check"><wa-switch data-setting="showKick" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="kick.api_warning">During peak usage, <strong>Kick's API becomes unstable</strong> and takes longer to relay events. This is not an issue with Streamer.bot or ChatRD. Kick has <em>"infinite money glitch"</em>, so I hope it gets better in the future. 😣</span>
+                        </wa-callout>
 
                     </div>
 
-
-
-
-
-
-
-                    <div class="platform" id="tiktok">
-
-                        <div class="config">
-                            <h2><img src="js/modules/tiktok/images/logo-tiktok.svg">TikTok</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showTiktok"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.chat">Chat</div>
                         </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-
-                            <div class="config">
-                                <label>Chat<br><small>Reads TikTok chat.</small></label>
-                                <label class="switch"><input type="checkbox" name="showTikTokMessages" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Followers</label><label class="switch"><input type="checkbox" name="showTikTokFollows" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Likes<br><small>Shows likes in <strong>15</strong> increments. Why? <em>Blame TikFinity!</em> 🤣</small></label>
-                                <label class="switch"><input type="checkbox" name="showTikTokLikes"><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Joins<br><small>Shows who joined chat at the bottom of the widget.</small></label>
-                                <label class="switch"><input type="checkbox" name="showTikTokJoins"><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Shares<br><small>Shows who shared -or clicks the "Share" button- to the stream.</small></label>
-                                <label class="switch"><input type="checkbox" name="showTikTokShares"><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Gifts<br><small>Shows TikTok Gifts, such as roses, galaxies, etc.</small></label><label class="switch"><input type="checkbox" name="showTikTokGifts" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Small Gift Images<br><small>Shrinks the size of the gift image to 28px.</small></label>
-                                <label class="switch"><input type="checkbox" name="showSmallTikTokGifts"><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Subscriptions</label><label class="switch"><input type="checkbox" name="showTikTokSubs" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Statistics<br><small>Shows TikTok Viewers and Likes.</small></label>
-                                <label class="switch"><input type="checkbox" name="showTikTokStatistics" checked><span class="slider"></span></label>
-                            </div>
-                            <hr>
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-info"></i> If you have <strong>Chat Field</strong> enabled, you need to <strong><a target="_blank" href="https://github.com/vortisrd/chatrd/?tab=readme-ov-file#-sending-messages-to-tiktok">follow the instructions</a></strong> to send messages to TikTok.
-                                </small>
-                            </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickMessages" data-default="true" size="xl"></wa-switch>
                         </div>
+                    </div>
 
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.followers">Followers</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickFollows" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.kicks_gift">Kicks Gift</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickKicks" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.subscriptions">Subscriptions</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="kick.gifted_subs"><i class="ri-corner-down-right-line"></i> Gifted Subs</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickGiftedSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="kick.gifted_bomb"><i class="ri-corner-down-right-line"></i> Gifted Bomb</div>
+                            <div class="description"><small data-i18n="kick.gifted_bomb_hint">Shows when a user gifted subs massively.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickMassGiftedSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="kick.gifted_bomb_train"><i class="ri-corner-down-right-line"></i> Gifted Bomb Users Train</div>
+                            <div class="description"><small data-i18n="kick.gifted_bomb_train_hint">Shows the a list of users gifted by the gifted bomb.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickGiftedSubsUserTrain" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.channel_points">Channel Point Rewards</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickRewardRedemptions" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.raids">Host</div>
+                            <div class="description"><small data-i18n="kick.raids_hint">It's like RAID on Twitch ... but on Kick</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickRaids" data-default="false" size="xl" disabled title="Unavailable at the moment"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.statistics">Statistics</div>
+                            <div class="description"><small data-i18n="kick.statistics_hint">Shows Kick Viewers</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickViewers" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+                    
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.embed_images_label">Kick Embedded Images</div>
+                            <div class="description"><small data-i18n="kick.embed_images_hint">Turn image links into embedded images in ChatRD</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKickEmbedImages" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="kick.embedding_roles"><i class="ri-corner-down-right-line"></i> Embedding Permissions</div>
+                            <div class="description"><small data-i18n="kick.embedding_roles_hint">Select which roles would be able to embed images.</small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="kickEmbedImageRoles" data-default="broadcaster,moderator" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="broadcaster" data-i18n="kick.embed_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="kick.embed_roles.moderator">Mods</wa-option>
+                        <wa-option value="vip" data-i18n="kick.embed_roles.vip">VIPs</wa-option>
+                        <wa-option value="og" data-i18n="kick.embed_roles.og">OGs</wa-option>
+                        <wa-option value="subscriber" data-i18n="kick.embed_roles.subscriber">Subs</wa-option>
+                    </wa-select>
+
+                    <wa-divider></wa-divider>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kick.role_selection">Speaker.bot Roles</div>
+                            <div class="description"><small data-i18n-html="kick.role_selection_hint">If Speaker.bot is enabled, only the roles selected below will have their messages spoken over TTS. <strong>Events will not be filtered by this.</strong></small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="kickTTSRoles" data-default="user" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="broadcaster" data-i18n="kick.tts_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="kick.tts_roles.moderator">Mods</wa-option>
+                        <wa-option value="vip" data-i18n="kick.tts_roles.vip">VIPs</wa-option>
+                        <wa-option value="og" data-i18n="kick.tts_roles.og">OGs</wa-option>
+                        <wa-option value="subscriber" data-i18n="kick.tts_roles.subscriber">Subs</wa-option>
+                        <wa-option value="user" data-i18n="kick.tts_roles.normal_user">Normal User</wa-option>
+                    </wa-select>
+
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── TikTok ─────────────────────────────────────────────── -->
+                <wa-details id="tiktok" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/tiktok/images/logo-tiktok.svg"> <span data-i18n="tiktok.title">TikTok</span></span>
+                        <span class="check"><wa-switch data-setting="showTiktok" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.chat">Chat</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokMessages" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.followers">Followers</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokFollows" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.likes">Likes</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokLikes" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.joins">Joins</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokJoins" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.shares">Shares</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokShares" data-default="false" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.gifts">Gifts</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokGifts" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.superfans">SuperFans/Subscribers</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokSubs" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    
+
+                    <div class="config">
+                        <div class="info">
+                            <div class="title" data-i18n-html="tiktok.fanclub_tag"><i class="ri-corner-down-right-line"></i> Fan Club Tag</div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="tiktokFanClubTag" value="" data-default="" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.statistics">Statistics</div>
+                            <div class="description"><small data-i18n="tiktok.statistics_hint">Shows TikTok Viewers and Likes</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTikTokStatistics" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+                    
+                    <wa-divider></wa-divider>
+
+                    <!--
+                    
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title">TikTok Embedded Images</div>
+                            <div class="description"><small>Turn image links into embedded images in ChatRD</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTiktokEmbedImages" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title"><i class="ri-corner-down-right-line"></i> Embedding Permissions</div>
+                            <div class="description"><small>Select which roles would be able to embed images.</small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="tiktokEmbedImageRoles" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer">Streamer</wa-option>
+                        <wa-option value="moderator">Mods</wa-option>
+                        <wa-option value="subscriber">Subs/Super Fans</wa-option>
+                        <wa-option value="top-gifter-1">Top Gifter No.1</wa-option>
+                        <wa-option value="top-gifter-2">Top Gifter No.2</wa-option>
+                        <wa-option value="top-gifter-3">Top Gifter No.3</wa-option>
+                        <wa-option value="fan-one">Fan Lv.1+</wa-option>
+                        <wa-option value="fan-ten">Fan Lv.10+</wa-option>
+                        <wa-option value="fan-twenty">Fan Lv.20+</wa-option>
+                        <wa-option value="fan-thirty">Fan Lv.30+</wa-option>
+                        <wa-option value="fan-forty">Fan Lv.40+</wa-option>
+                        <wa-option value="fan-fifty">Fan Lv.50+</wa-option>
+                    </wa-select>
+
+                    <wa-divider></wa-divider>
+
+                    -->
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tiktok.role_selection">Speaker.bot Roles</div>
+                            <div class="description"><small data-i18n-html="tiktok.role_selection_hint">If Speaker.bot is enabled, only the roles selected below will have their messages spoken over TTS. <strong>Events will not be filtered by this.</strong></small></div>
+                        </div>
+                    </div>
+
+                    <wa-select data-setting="tiktokTTSRoles" data-default="user" placeholder="..." max-options-visible="10" multiple with-clear>
+                        <wa-option value="streamer" data-i18n="tiktok.tts_roles.streamer">Streamer</wa-option>
+                        <wa-option value="moderator" data-i18n="tiktok.tts_roles.moderator">Mods</wa-option>
+                        <wa-option value="subscriber" data-i18n="tiktok.tts_roles.subscriber">Subs/Super Fans</wa-option>
+                        <wa-option value="top-gifter-1" data-i18n="tiktok.tts_roles.top_gifter_1">Top Gifter No.1</wa-option>
+                        <wa-option value="top-gifter-2" data-i18n="tiktok.tts_roles.top_gifter_2">Top Gifter No.2</wa-option>
+                        <wa-option value="top-gifter-3" data-i18n="tiktok.tts_roles.top_gifter_3">Top Gifter No.3</wa-option>
+                        <wa-option value="fan-one" data-i18n="tiktok.tts_roles.fan_one">Fan Lv.1+</wa-option>
+                        <wa-option value="fan-ten" data-i18n="tiktok.tts_roles.fan_ten">Fan Lv.10+</wa-option>
+                        <wa-option value="fan-twenty" data-i18n="tiktok.tts_roles.fan_twenty">Fan Lv.20+</wa-option>
+                        <wa-option value="fan-thirty" data-i18n="tiktok.tts_roles.fan_thirty">Fan Lv.30+</wa-option>
+                        <wa-option value="fan-forty" data-i18n="tiktok.tts_roles.fan_forty">Fan Lv.40+</wa-option>
+                        <wa-option value="fan-fifty" data-i18n="tiktok.tts_roles.fan_fifty">Fan Lv.50+</wa-option>
+                        <wa-option value="user" data-i18n="tiktok.tts_roles.normal_user">Normal User</wa-option>
+                    </wa-select>
+
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── StreamElements ─────────────────────────────────────── -->
+                <wa-details id="streamelements" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/streamelements/images/logo-streamelements.svg"> <span data-i18n="streamelements.title">Streamelements</span></span>
+                        <span class="check"><wa-switch data-setting="showStreamelements" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="streamelements.tips">Tips</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showStreamElementsTips" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="streamelements.setup_warning">You need to connect Streamelements to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/streamelements">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
+
+                    </div>
+                </wa-details>
+
+
+
+
+
+
+
+                <!-- ── Streamlabs ─────────────────────────────────────────── -->
+                <wa-details id="streamlabs" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/streamlabs/images/logo-streamlabs.svg"> <span data-i18n="streamlabs.title">Streamlabs</span></span>
+                        <span class="check"><wa-switch data-setting="showStreamlabs" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="streamlabs.donations">Donations</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showStreamlabsDonations" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="streamlabs.setup_warning">You need to connect Streamlabs to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/streamlabs">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
 
                     </div>
 
+                </wa-details>
 
 
 
 
 
 
-                    <div class="platform" id="kick">
+                <!-- ── Patreon ────────────────────────────────────────────── -->
+                <wa-details id="patreon" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/patreon/images/logo-patreon.svg"> <span data-i18n="patreon.title">Patreon</span></span>
+                        <span class="check"><wa-switch data-setting="showPatreon" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
 
-                        <div class="config">
-                            <h2><img src="js/modules/kick/images/logo-kick.svg">Kick</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showKick"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="patreon.memberships">Memberships</div>
                         </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-triangle-exclamation"></i> During peak usage, <strong>Kick's API becomes unstable</strong> and takes longer to relay events. This is not an issue with Streamer.bot or ChatRD. Kick has <em>"infinite money glitch"</em>, so I hope it gets better in the future. 😣
-                                </small>
-                            </div>
-
-                            <hr>
-
-                            <div class="config">
-                                <label>Your Kick Username<br><small>Your user handle. It's on kick.com/<strong><u>username</u></strong></small></label>
-                                <input type="text" name="kickUserName" value="" placeholder="username">
-                            </div>
-                            <div class="config">
-                                <label>Chat<br><small>Reads Kick chat.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickMessages" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Followers</label><label class="switch"><input type="checkbox" name="showKickFollows" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Kicks Gift<br><small>Shows Kicks Gift events.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickKicks" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Small Kicks Images<br><small>Shrinks the size of the gift image to 28px.</small></label>
-                                <label class="switch"><input type="checkbox" name="showSmallKicksGifts"><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Subscriptions<br><small>Shows Subscription events. <u><strong>Disabling this disables all sub events</strong></u>.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickSubs" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Subs<br><small>When a user gifts another user a sub.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickGiftedSubs" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Bomb<br><small>When a user gifts subs massively.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickMassGiftedSubs" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Gifted Bomb Users Train<br><small>Shows all users that were gifted a  sub on a Gifted Bomb.</small></label>
-                                <label class="switch"><input type="checkbox" name="showKickGiftedSubsUserTrain" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Channel Point Rewards</label>
-                                <label class="switch"><input type="checkbox" name="showKickRewardRedemptions" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Host<br><small>It's like "raid" but on Kick.</small></label><label class="switch"><input type="checkbox" name="showKickRaids" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Statistics<br><small>Shows Kick Viewers. <strong>Self-updates each 15 seconds.</strong></small></label>
-                                <label class="switch"><input type="checkbox" name="showKickViewers" checked><span class="slider"></span></label>
-                            </div>
-                            
+                        <div class="element">
+                            <wa-switch data-setting="showPatreonMemberships" data-default="true" size="xl"></wa-switch>
                         </div>
+                    </div>
 
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="patreon.setup_warning">You need to connect Patreon to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/patreon">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
 
                     </div>
 
+                </wa-details>
 
 
 
 
 
 
-                    <div class="platform" id="streamelements">
+                <!-- ── TipeeeStream ───────────────────────────────────────── -->
+                <wa-details id="tipeeestream" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/tipeeestream/images/logo-tipeeestream.svg"> <span data-i18n="tipeee.title">TipeeeStream</span></span>
+                        <span class="check"><wa-switch data-setting="showTipeee" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
 
-                        <div class="config">
-                            <h2><img src="js/modules/streamelements/images/logo-streamelements.svg">StreamElements</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showStreamelements"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="tipeee.donations">Donations</div>
                         </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect StreamElements to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/streamelements">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-					        <div class="config">
-                                <label>Tips</label>
-                                <label class="switch"><input type="checkbox" name="showStreamElementsTips" checked><span class="slider"></span></label>
-                            </div>
+                        <div class="element">
+                            <wa-switch data-setting="showTipeeeDonations" data-default="true" size="xl"></wa-switch>
                         </div>
+                    </div>
 
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="tipeee.setup_warning">You need to connect TipeeeStream to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/tipeee-stream">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
 
                     </div>
 
+                </wa-details>
 
 
 
 
 
 
-                    <div class="platform" id="streamlabs">
+                <!-- ── Ko-fi ─────────────────────────────────────────────── -->
+                <wa-details id="kofi" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/kofi/images/logo-kofi.svg"> <span data-i18n="kofi.title">Ko-Fi</span></span>
+                        <span class="check"><wa-switch data-setting="showKofi" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
 
-                        <div class="config">
-                            <h2><img src="js/modules/streamlabs/images/logo-streamlabs.svg">Streamlabs</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showStreamlabs"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kofi.donations">Donations</div>
                         </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect Streamlabs to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/streamlabs">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-					        <div class="config">
-                                <label>Donations</label>
-                                <label class="switch"><input type="checkbox" name="showStreamlabsDonations" checked><span class="slider"></span></label>
-                            </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKofiDonations" data-default="true" size="xl"></wa-switch>
                         </div>
+                    </div>
 
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kofi.subscriptions">Subscriptions</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKofiSubscriptions" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="kofi.orders">Orders</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showKofiOrders" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="kofi.setup_warning">You need to connect Ko-Fi to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/ko-fi">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
 
                     </div>
 
+                </wa-details>
 
 
 
 
 
 
-                    <div class="platform" id="patreon">
+                <!-- ── Fourthwall ─────────────────────────────────────────── -->
+                <wa-details id="fourthwall" class="section">
+                    <span class="header" slot="summary">
+                        <span class="title"><img src="js/modules/fourthwall/images/logo-fourthwall.svg"> <span data-i18n="fourthwall.title">Fourthwall</span></span>
+                        <span class="check"><wa-switch data-setting="showFourthwall" data-default="false" class="section-switch" size="xl"></wa-switch></span>
+                    </span>
 
-                        <div class="config">
-                            <h2><img src="js/modules/patreon/images/logo-patreon.svg">Patreon</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showPatreon"><span class="slider"></span>
-                                </label>
-                            </div>
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.donations">Donations</div>
                         </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect Patreon to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/patreon">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-					        <div class="config">
-                                <label>Memberships</label>
-                                <label class="switch"><input type="checkbox" name="showPatreonMemberships" checked><span class="slider"></span></label>
-                            </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallDonations" data-default="true" size="xl"></wa-switch>
                         </div>
+                    </div>
 
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.subscriptions">Subscriptions</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallSubscriptions" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.orders">Orders</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallOrders" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="fourthwall.show_order_image"><i class="ri-corner-down-right-line"></i> Shows Order Image</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallShowImage" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.gift_purchase">Gift Purchase</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallGiftPurchase" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n-html="fourthwall.show_gift_image"><i class="ri-corner-down-right-line"></i> Shows Gift Image</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallShowGiftImage" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.gift_draw">Gift Draw</div>
+                        </div>
+                        <div class="element">
+                            <wa-switch data-setting="showFourthwallGiftDraw" data-default="true" size="xl"></wa-switch>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        <div class="info">    
+                            <div class="title" data-i18n="fourthwall.gift_draw_command">Gift Command</div>
+                            <div class="description"><small data-i18n="fourthwall.gift_draw_command_hint">Command used to join the Gift Draw.</small></div>
+                        </div>
+                        <div class="element">
+                            <wa-input data-setting="fourthWallGiftDrawCommand" data-default="!enter" value="!enter" autocomplete="off"></wa-input>
+                        </div>
+                    </div>
+
+                    <div class="config">
+                        
+                        <wa-callout size="s">
+                            <wa-icon slot="icon" name="circle-info"></wa-icon>
+                            <span data-i18n-html="fourthwall.setup_warning">You need to connect Fourthwall to Streamer.Bot. <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/fourthwall">Follow the tutorial</a>.</strong></span>
+                        </wa-callout>
 
                     </div>
 
+                </wa-details>
 
 
 
 
 
 
-                    <div class="platform" id="tipeee">
-
-                        <div class="config">
-                            <h2><img src="js/modules/tipeeestream/images/logo-tipeeestream.svg">TipeeeStream</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showTipeee"><span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect TipeeeStream to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/tipeee-stream">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-					        <div class="config">
-                                <label>Donations</label>
-                                <label class="switch"><input type="checkbox" name="showTipeeeDonations" checked><span class="slider"></span></label>
-                            </div>
-                            
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-                    <div class="platform" id="kofi">
-
-                        <div class="config">
-                            <h2><img src="js/modules/kofi/images/logo-kofi.svg">Ko-fi</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showKofi"><span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect Ko-Fi to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/ko-fi">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-                            <div class="config">
-                                <label>Donations</label><label class="switch"><input type="checkbox" name="showKofiDonations" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Subscriptions</label><label class="switch"><input type="checkbox" name="showKofiSubscriptions" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Orders</label><label class="switch"><input type="checkbox" name="showKofiOrders" checked><span class="slider"></span></label>
-                            </div>
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-                    <div class="platform" id="fourthwall">
-
-                        <div class="config">
-                            <h2><img src="js/modules/fourthwall/images/logo-fourthwall.svg">Fourthwall</h2>
-
-                            <div class="platform-enable">
-                                <label><small>Enable</small></label>
-                                <label class="switch">
-                                    <input type="checkbox" name="showFourthwall"><span class="slider"></span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="setup" style="overflow: hidden; transition: max-height 0.4s, opacity 0.4s; display: none; max-height: 0px; opacity: 0;">
-                            <div class="config">
-                                <small class="warning">
-                                    <i class="fa-solid fa-circle-exclamation"></i> You need to connect Fourthwall to Streamer.Bot.
-                                    <strong><a target="_blank" href="https://docs.streamer.bot/guide/integrations/fourthwall">Follow the tutorial</a>.</strong>
-                                </small>
-                            </div>
-                            <div class="config">
-                                <label>Donations</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallDonations" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Subscriptions</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallSubscriptions" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Orders</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallOrders" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Shows Order Image</small>
-                                </label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallShowImage" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Gift Purchase</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallGiftPurchase" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label><i class="fa-solid fa-arrow-turn-up"></i> Shows Gift Image</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallShowGiftImage" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Gift Draw</label>
-                                <label class="switch"><input type="checkbox" name="showFourthwallGiftDraw" checked><span class="slider"></span></label>
-                            </div>
-                            <div class="config">
-                                <label>Gift Command<br><small>Command used to join the Gift Draw. </small></label>
-                                <input type="text" name="fourthWallGiftDrawCommand" value="!enter">
-                            </div>
-                        </div>
-
-
-                    </div>
-
-
-
-
-
-
-
-                </form>
 
 
             </div>
+
+
             <div id="preview">
-                <iframe id="chatrdpreview" src="" frameborder="0"></iframe>
+                <iframe id="chatRDPreview" src="" frameborder="0"></iframe>
+            </div>
+
+
+
+
+
+            
+        </div>
+
+        <footer>
+
+            <div class="url-bar">
+                <button id="copyUrlButton" data-i18n="footer.copy_url">Copy URL</button>
+                <button id="openImportModal" data-i18n="footer.import_settings">Import Settings</button>
+            </div>
+
+            <div class="credits">
+                
+                <div class="links" style="display: none">
+                    <p data-i18n-html="footer.made_by">Made with ❤️ by <strong>VortisRD</strong></p>
+                
+                    <p>
+                        <a target="_blank" href="https://twitch.com/vortisrd"><i class="ri-twitch-fill"></i></a>
+                        <a target="_blank" href="https://youtube.com/@vortisrd"><i class="ri-youtube-fill"></i></a>
+                        <a target="_blank" href="https://kick.com/vortisrd"><i class="ri-kick-line"></i></a>
+                        <a target="_blank" href="https://tiktok.com/@vortisrd"><i class="ri-tiktok-fill"></i></a>
+                        <a target="_blank" href="https://x.com/vortisrd"><i class="ri-twitter-x-fill"></i></a>
+                        <a target="_blank" href="https://github.com/vortisrd"><i class="ri-github-fill"></i></a>
+                    </p>
+                </div>
+
+                <div class="live" style="display: none">
+                    <div class="status">
+                        <span class="pill"></span> <span data-i18n-html="footer.live">Vortis is <strong>live!</strong> Come say hi! 😁</span>
+                    </div>
+                    <div class="links">
+                        <a href="http://twitch.tv/vortisrd" target="_blank" class="platform twitch"><i class="ri-twitch-fill"></i></a>
+                        <a href="http://youtube.com/@vortisrd/live" target="_blank" class="platform youtube"><i class="ri-youtube-fill"></i></a>
+                        <a href="http://kick.com/vortisrd" target="_blank" class="platform kick"><i class="ri-kick-fill"></i></a>
+                        <a href="http://tiktok.com/@vortisrd/live" target="_blank" class="platform tiktok"><i class="ri-tiktok-fill"></i></a>
+                    </div>
+                </div>
+
+            </div>
+
+            
+        </footer>
+
+
+    </div>
+    
+
+
+    <!-- ── Info Modal ────────────────────────────────────────── -->
+    <wa-dialog id="modalInfo" class="modal centered" without-header>
+
+        <div class="chatrd-header">
+            <img src="images/logo-chatrd.png" alt="">
+        </div>
+
+        <div class="info" id="youtubeEmoteBothFields">
+            <span data-i18n-html="modal.youtubeemote.both_fields">Both Fields Are <strong><u>Required</u></strong> to Add an Emote.</span>
+        </div>
+        
+        <wa-button class="button cancel" slot="footer" id="youtubeEmoteOkButton" variant="brand">OK</wa-button>
+    </wa-dialog>
+
+    <!-- ── YES/NO Modal ───────────────────────────────────────── -->
+    <wa-dialog id="modalYesNo" class="modal centered" without-header>
+
+        <div class="chatrd-header">
+            <img src="images/logo-chatrd.png" alt="">
+        </div>
+
+
+        <div id="youtubeEmoteLogic" class="content">
+            <div class="info" id="youtubeEmoteDeletion">
+
+            </div>
+
+            <div class="info" id="youtubeEmoteDeletionMessage">
+                <span data-i18n-html="modal.youtubeemote.delete">Are you <strong><u>sure</u></strong> you want to delete this emote?</span>
             </div>
         </div>
         
+        <wa-button class="button" id="youtubeEmoteDeleteButton" slot="footer" variant="brand">
+            <span data-i18n="modal.buttons.yes">Yes</span>
+        </wa-button>
+        <wa-button class="button cancel" slot="footer" appearance="outlined">
+            <span data-i18n="modal.buttons.no">No</span>
+        </wa-button>
+    </wa-dialog>
 
-                
-
-    
+    <!-- ── YouTube Member Emote Modal ─────────────────────────── -->
+    <wa-dialog id="modalYoutubeAddEmote" class="modal" without-header>
         
-        <footer>
-            <div class="nav-bar">
-                <a title="Streamer.bot" href="#streamerbot" class="active"><img src="images/logo-streamerbot.png"></a>
-                <a title="Speaker.bot" href="#speakerbot" class="active"><img src="images/logo-speakerbot.png"></a>
-                <a title="Setup" href="#general"><i class="fa-solid fa-wrench"></i></a>
-                <a title="Twitch" href="#twitch"><img src="js/modules/twitch/images/logo-twitch.svg"></a>
-                <a title="YouTube" href="#youtube"><img src="js/modules/youtube/images/logo-youtube.svg"></a>
-                <a title="TikTok" href="#tiktok"><img src="js/modules/tiktok/images/logo-tiktok.svg"></a>
-                <a title="Kick" href="#kick"><img src="js/modules/kick/images/logo-kick.svg"></a>
-                <a title="StreamElements" href="#streamelements"><img src="js/modules/streamelements/images/logo-streamelements.svg"></a>
-                <a title="Streamlabs" href="#streamlabs"><img src="js/modules/streamlabs/images/logo-streamlabs.svg"></a>
-                <a title="Patreon" href="#patreon"><img src="js/modules/patreon/images/logo-patreon.svg"></a>
-                <a title="TipeeeStream" href="#tipeee"><img src="js/modules/tipeeestream/images/logo-tipeeestream.svg"></a>
-                <a title="Ko-Fi" href="#kofi"><img src="js/modules/kofi/images/logo-kofi.svg"></a>
-                <a title="FourthWall" href="#fourthwall"><img src="js/modules/fourthwall/images/logo-fourthwall.svg"></a>					
-            </div>
 
-            <div class="url-bar">
-                <input type="text" id="outputUrl" placeholder="URL Here..." readonly="">
-                <button onclick="copyUrl()">Copy URL</button>
-                <button id="openImportModal">Import Settings</button>
-            </div>
+        <div class="chatrd-header">
+            <img src="images/logo-chatrd.png" alt="">
+        </div>
 
-            <p>Made with ❤️ by <strong>VortisRD</strong></p>
-            <p>
-                <a target="_blank" href="https://twitch.com/vortisrd"><i class="fa-brands fa-twitch"></i></a>
-                <a target="_blank" href="https://youtube.com/@vortisrd"><i class="fa-brands fa-youtube"></i></a>
-                <a target="_blank" href="https://tiktok.com/@vortisrd"><i class="fa-brands fa-tiktok"></i></a>
-                <a target="_blank" href="https://kick.com/vortisrd">
-                    <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 800 800">
-                        <polygon class="st0" points="336 111 336 239 401 239 401 175 465 175 465 111 657 111 657 303 593 303 593 367 529 367 529 432 593 432 593 496 657 496 657 689 465 689 465 624 401 624 401 560 336 560 336 689 143 689 143 111 336 111"/>
-                    </svg>
-                </a>
-                <a target="_blank" href="https://x.com/vortisrd"><i class="fa-brands fa-x-twitter"></i></a>
-                <a target="_blank" href="https://github.com/vortisrd"><i class="fa-brands fa-github"></i></a>
-            </p>
-        </footer>
+        <h3><span data-i18n-html="modal.youtubeemote.title">YouTube Member Emote</span></h3>
+
+        <div>
+            <span data-i18n="modal.youtubeemote.emote_name">Emote Name</span>
+            <wa-input id="newEmoteName" data-i18n-placeholder="modal.youtubeemote.emote_name_placeholder" placeholder='Use "EmoteName", don&apos;t use ":EmoteName:"' autocomplete="off">
+                <wa-icon library="remixicon" name="User%20%26%20Faces/emotion-happy-line" slot="start"></wa-icon>
+            </wa-input>
+        </div>
+
+        <div>
+            <span data-i18n="modal.youtubeemote.image_url">Image URL</span>
+            <wa-input id="newEmoteURL" data-i18n-placeholder="modal.youtubeemote.image_url_placeholder" placeholder="https://example.com/emote.png" autocomplete="off">
+                <wa-icon library="remixicon" name="Editor/link-m" slot="start"></wa-icon>
+            </wa-input>
+        </div>
+        
+        <wa-button class="button cancel" slot="footer" id="addEmoteCancel" appearance="outlined">
+            <span data-i18n="modal.buttons.cancel">Cancel</span>
+        </wa-button>
+        <wa-button class="button save" slot="footer" id="addEmoteConfirm" variant="brand">
+            <span data-i18n="modal.buttons.save">Save</span>
+        </wa-button>
+
+        <input type="hidden" id="emoteIdLegacy" value="">
+    </wa-dialog>
+
+    <!-- ── URL Import Modal ────────────────────────────────────── -->
+    <wa-dialog id="modalUrlImport" class="modal centered" without-header>
+        
+
+        <div class="chatrd-header">
+            <img src="images/logo-chatrd.png" alt="">
+        </div>
+
+        <h3 data-i18n-html="modal.import.title">Import Settings</h3>
+
+        <span data-i18n="modal.import.subtitle">Paste your ChatRD URL here</span>
+        <wa-input id="importUrl" placeholder="https://vortisrd.github.io/chatrd/chat.html?..." autocomplete="off">
+            <wa-icon library="remixicon" name="Editor/link-m" slot="start"></wa-icon>
+        </wa-input>
+        
+        <wa-button class="button cancel" slot="footer" id="importUrlCancel" appearance="outlined">
+            <span data-i18n="modal.buttons.cancel">Cancel</span>
+        </wa-button>
+        
+        <wa-button class="button save" slot="footer" id="importUrlConfirm" variant="brand">
+            <span data-i18n="modal.buttons.save">Import</span>
+        </wa-button>
+
+        <input type="hidden" id="emoteIdLegacy" value="">
+    </wa-dialog>
+
+    <!-- ── Streamer.bot Action Code Import Modal ──────────────── -->
+    <wa-dialog id="modalStreamerBotActions" class="modal dialog-deny-close centered" without-header>
+        
+
+        <div class="chatrd-header">
+            <img src="images/logo-chatrd.png" alt="">
+        </div>
+
+        <h3><span data-i18n="modal.streamerbot.title">⚠️ Streamer.bot Actions Not Found ⚠️</span></h3>
+        
+        <div class="info">
+            
+            <div data-i18n="modal.streamerbot.subtitle">Copy the code and import the following actions:</div> 
+            
+            <div id="sbActionList">
+            </div> 
+
+            <label>
+                <code id="sbActionCode">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</code>
+                <button id="sbActionsCopy"><i class="ri-file-copy-line"></i></button>
+            </label>
+        </div>
+
+        <wa-button class="button cancel" slot="footer" id="reloadStreamerBotActions" variant="brand">
+            <span data-i18n="modal.buttons.reload">Reload</span>
+        </wa-button>
+
+    </wa-dialog>
+
+    <div id="loading">
+        <img class="logo" src="images/logo-chatrd-full.png" alt="">
+        <span id="loadingPercentage"><i class="ri-loader-4-line"></i> <span>0%</span></span>
     </div>
-
-    
-
-	<div id="addEmoteModal" class="modal hidden">
-		<div class="modal-content">
-			<h3>Add YouTube Member Emote</h3>
-			<label>
-				Emote Name
-				<input type="text" id="newEmoteName" placeholder="Use &quot;EmoteName&quot;, don't use &quot;:EmoteName:&quot;" class="avoid">
-			</label>
-			<label>
-				Image URL<br>
-                <small>Don't use temporary image domains. Neither Discord linked images.</small>
-				<input type="text" id="newEmoteURL" placeholder="https://example.com/emote.png" class="avoid">
-			</label>
-			<div class="modal-buttons">
-				<button id="confirmAddEmote" class="confirm">Add</button>
-				<button id="cancelAddEmote" class="cancel">Cancel</button>
-			</div>
-		</div>
-	</div>
-
-    <div id="importUrlModal" class="modal hidden">
-		<div class="modal-content">
-			<h3>Import Settings</h3>
-			<label>
-				Paste your existing ChatRD URL
-				<input type="text" id="importUrlString" placeholder="https://vortisrd.github.io/chatrd/chat.html?..." class="avoid">
-			</label>
-			<div class="modal-buttons">
-				<button id="confirmImportUrl" class="confirm">Import</button>
-				<button id="cancelImportUrl" class="cancel">Cancel</button>
-			</div>
-		</div>
-	</div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/simple-notify@1.0.4/dist/simple-notify.min.js"></script>
+            
     <script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.6/dist/purify.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@streamerbot/client@1.12.1/dist/streamerbot-client.min.js"></script>
+    <script src="https://unpkg.com/@streamerbot/client/dist/streamerbot-client.js"></script>
 
+    <script src="js/i18n-settings.js?nocache=011"></script>
+    <script src="js/speakerbot.js?nocache=011"></script>
+
+    <script src="js/audio.js?nocache=011"></script>
     
-    <script src="js/speakerbot.js"></script>
-    <script src="js/settings.js"></script>
+    <script type="module" src="js/settings.js?nocache=011"></script>
 </body>
 </html>
