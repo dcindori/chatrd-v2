@@ -13,6 +13,7 @@ const ampm                          = getURLParamLegacy("ampmTimeStamps", () => 
 const showBadges                    = getURLParam("showBadges", true);
 const showPlatformStatistics        = getURLParam("showPlatformStatistics", true);
 const combineViewers                = getURLParam("combineViewers", false);
+const viewerPollInterval            = Number(getURLParam("viewerPollInterval", 60)); /* seconds; 0 disables the viewer-count fallback poll */
 
 const chatThreshold                 = 100;
 const chatOneLine                   = getURLParam("chatOneLine", false);
@@ -166,6 +167,29 @@ if (showPlatformStatistics == true) {
         document.querySelector('#combine-viewers').style.display = '';
     }
 
+}
+
+
+/* Streamer.bot only pushes *.ViewerCountUpdate on its own schedule (often only
+   when the number changes), so after an overlay reload a platform can sit at 0
+   for a long time. This polls a public endpoint once on start and then every
+   `viewerPollInterval` seconds. `fetcher` resolves to a number (0 = offline)
+   or null to leave the current value untouched (e.g. network error). */
+function startViewerCountPoller(label, fetcher, apply) {
+    if (!(viewerPollInterval > 0)) return;
+
+    const tick = async () => {
+        try {
+            const count = await fetcher();
+            if (count === null || count === undefined || isNaN(count)) return;
+            apply({ viewerCount: count });
+        } catch (err) {
+            console.debug(`[ChatRD][${label}] Viewer count poll failed`, err);
+        }
+    };
+
+    tick();
+    setInterval(tick, Math.max(15, viewerPollInterval) * 1000);
 }
 
 

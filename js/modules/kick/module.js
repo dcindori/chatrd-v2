@@ -137,6 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const kickStreamerLogin = await getStreamerInfo();
                 console.log('Kick streamer data: ', kickStreamerLogin.platforms.kick);
                 const kickUserId = kickStreamerLogin.platforms.kick.broadcasterUserId;
+                kickStartViewerPoll(kickStreamerLogin.platforms.kick.broadcasterLogin);
                 const kick7TVEmotes = await getKick7TVEmotes(kickUserId);
                 if (kick7TVEmotes != null) {
                     kick7TVEmotes.forEach(emote => kick7TVEmojis.set(emote.name, emote.url));
@@ -635,6 +636,18 @@ async function kickChatClearMessages() {
     chatContainer.querySelectorAll(`.item.kick`).forEach(element => {
         element.parentNode.remove();
     });
+}
+
+function kickStartViewerPoll(login) {
+    if (showPlatformStatistics == false || showKickViewers == false || !login) return;
+
+    startViewerCountPoller('Kick', async () => {
+        const res = await fetch(`https://kick.com/api/v2/channels/${encodeURIComponent(login)}/livestream`, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const json = await res.json();
+        /* data is null when the channel is offline */
+        return json?.data ? (parseInt(json.data.viewers, 10) || 0) : 0;
+    }, kickUpdateStatistics);
 }
 
 async function kickUpdateStatistics(data) {

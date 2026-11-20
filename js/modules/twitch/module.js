@@ -231,6 +231,7 @@ if (showTwitch) {
     waitForStreamerBot('Twitch').then(() => {
         registerPlatformHandlersToStreamerBot(twitchMessageHandlers, '[ChatRD][Twitch]');
         twitchGoalsFetch();
+        twitchStartViewerPoll();
     });
 }
 
@@ -1496,6 +1497,24 @@ async function twitchChatClearMessages() {
 }
 
 
+
+async function twitchStartViewerPoll() {
+    if (showPlatformStatistics == false || showTwitchViewers == false) return;
+
+    const info  = await getStreamerInfo().catch(() => null);
+    const login = info?.platforms?.twitch?.broadcastUser;
+    if (!login) return;
+
+    startViewerCountPoller('Twitch', async () => {
+        const res = await fetch(`https://decapi.me/twitch/viewercount/${encodeURIComponent(login)}`, { cache: 'no-store' });
+        if (!res.ok) return null;
+        const text = (await res.text()).trim();
+        /* DecAPI answers "<login> is offline" when not live */
+        if (/offline/i.test(text)) return 0;
+        const n = parseInt(text, 10);
+        return isNaN(n) ? null : n;
+    }, twitchUpdateStatistics);
+}
 
 async function twitchUpdateStatistics(data) {
     if (showPlatformStatistics == false || showTwitchViewers == false) return;
